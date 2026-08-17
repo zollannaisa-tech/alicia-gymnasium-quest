@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V10.10</title>
+<title>Alicia Gymnasium Quest – V10.11</title>
 <link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v109.png?v=109">
 <link rel="icon" type="image/png" href="alicia-gymnasium-icon-v109.png?v=109">
 <link rel="manifest" href="manifest-v109.webmanifest?v=109">
@@ -204,7 +204,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.10 · HELP SYSTEM</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.11 · DIAGNOSTIC RETURN FIX</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -4152,6 +4152,73 @@ renderExercise=function(boxId,e,after=null,exam=false){
   const j=document.createElement('div');j.id=boxId+'joker';j.style.display='none';duo.insertAdjacentElement('afterend',j);
  }
 };
+
+
+// ===================== V10.11 — DIAGNOSTIC CENTER RETURN FIX =====================
+state.v1011 = state.v1011 || {version:'10.11'};
+
+function returnDiagnosticCenterV1011(){
+  // Clear a finished session safely, refresh diagnostic state and open the real center.
+  state.session=null;
+  if(typeof renderT0TestsV10==='function') renderT0TestsV10();
+  if(typeof renderDiagnosticCenterV10==='function') renderDiagnosticCenterV10();
+  saveSilent();
+  showScreen('t0tests');
+  setTimeout(()=>{
+    const target=document.getElementById('t0tests');
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+  },60);
+}
+
+// Override finishSession so the final Diagnostic Center button always has a live handler.
+finishSession=function(){
+  if(!state.session)return;
+  if(state.session.kind==='boss'){finishBoss(false);return;}
+  const s=state.session;
+  const answeredCount=Object.keys(s.answered||{}).length;
+  const pct=s.ids.length?Math.round(100*s.correct/s.ids.length):0;
+
+  if(s.kind==='series'){
+    state.longSeriesBest[s.ids.length]=Math.max(state.longSeriesBest[s.ids.length]||0,pct);
+    renderSeriesDots(s.ids.length,s.ids.length);
+  }
+
+  if(s.kind==='diagnostic' && state.v10diag && state.v10diag.current){
+    const id=state.v10diag.current;
+    state.v10diag.done[id]=true;
+    state.v10diag.scores[id]=pct;
+    state.v10diag.current=null;
+  }
+
+  const box=document.getElementById(s.boxId);
+  if(box){
+    box.style.display='block';
+    box.innerHTML=`<h2>🏁 ${s.kind==='diagnostic'?'Diagnostic terminé':'Challenge beendet'}</h2>
+      <div class="big">${pct}%</div>
+      <p>${s.correct}/${s.ids.length} richtig · ${answeredCount}/${s.ids.length} beantwortet</p>
+      <p class="muted">${s.kind==='diagnostic'?'La matrice vient d’être actualisée : les prochaines missions s’adaptent automatiquement.':'Der Coach hat die Matrix aktualisiert.'}</p>
+      ${s.kind==='diagnostic'
+        ? `<button class="btn" onclick="returnDiagnosticCenterV1011()">🧭 Diagnostic Center</button>`
+        : `<button class="btn" onclick="showScreen('home')">🏠 Zur Startseite</button>`}`;
+  }
+
+  // Keep enough state until the button is rendered, then persist.
+  if(state.currentDailyStep && typeof completeCurrentDailyStep==='function') completeCurrentDailyStep();
+  if(typeof checkTrophies==='function') checkTrophies();
+  save();
+};
+
+// Also repair any already-rendered old Diagnostic Center button after load.
+function repairDiagnosticButtonsV1011(){
+  document.querySelectorAll('button').forEach(b=>{
+    if((b.textContent||'').trim().includes('Diagnostic Center')){
+      b.onclick=returnDiagnosticCenterV1011;
+      b.removeAttribute('disabled');
+    }
+  });
+}
+setTimeout(repairDiagnosticButtonsV1011,400);
+document.addEventListener('click',()=>setTimeout(repairDiagnosticButtonsV1011,30),true);
 
 updateAll();
 </script>
