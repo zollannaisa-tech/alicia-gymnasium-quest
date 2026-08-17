@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V10.2 FIX</title>
+<title>Alicia Gymnasium Quest – V10.8</title>
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="app-icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -198,7 +198,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.2 FIX · ADAPTIVE COACH</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.8 · GLOBAL START FIX</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -3139,6 +3139,911 @@ updateAll=function(){
  updateAllV102HotfixBase();
  if(document.getElementById('vocabThemeGrid')) renderVocabPathV10();
 };
+
+
+// ===================== V10.3 — LINK / START BUTTON HARDENING =====================
+state.v103 = state.v103 || {version:'10.3', linkAudit:true};
+
+function openSessionVisibleV103(screenId, boxId, exercises, kind='training', title=null){
+  // First open the destination screen; only then render the exercise.
+  // This avoids updateAll() repainting the page after the question has been created.
+  showScreen(screenId);
+  const box=document.getElementById(boxId);
+  if(!box){ console.error('Missing exercise box:',boxId); return; }
+  startSession(exercises,boxId,kind);
+  box.style.display='block';
+  // Make the exercise impossible to miss on iPad.
+  setTimeout(()=>box.scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
+// T0: hide the menu while a diagnostic is running and open the first question immediately.
+startT0DomainV10=function(id){
+  const spec={
+    T0DE:{domain:'D',n:25},
+    T0MA:{domain:'M',n:25},
+    T0LO:{domain:'L',n:20},
+    T0MX:{domain:'ALL',n:30}
+  }[id];
+  if(!spec)return;
+  let pool=[];
+  if(spec.domain==='L') pool=logicPackV10(spec.n);
+  else if(spec.domain==='ALL'){
+    for(let i=0;i<spec.n;i++) pool.push(i%3===0?genDeutsch():i%3===1?genMath():genLogicV10());
+  } else {
+    pool=expandedPool(spec.domain,spec.n);
+  }
+  if(!pool.length){
+    alert('Keine Aufgaben verfügbar. Bitte Seite neu laden.');
+    return;
+  }
+  state.v10diag.current=id;
+  showScreen('t0tests');
+  const menu=document.getElementById('t0Domains');
+  if(menu)menu.style.display='none';
+  const box=document.getElementById('t0DomainExercise');
+  if(box)box.innerHTML=`<div class="notice"><strong>🧪 ${diagLabelV10(id)}</strong><br>Diagnostic en cours…</div>`;
+  startSession(pool,'t0DomainExercise','diagnostic');
+  setTimeout(()=>document.getElementById('t0DomainExercise')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+};
+
+// Legacy T0 buttons (if any remain) now route to the same reliable engine.
+startT0Domain=function(id){ startT0DomainV10(id); };
+
+startFebruaryTest=function(domain,n=30){
+  const p=februaryPack(domain,n);
+  showScreen('t0tests');
+  const menu=document.getElementById('t0Domains'); if(menu)menu.style.display='none';
+  startSession(p,'t0DomainExercise','diagnostic');
+  setTimeout(()=>document.getElementById('t0DomainExercise')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+};
+
+// Restore the T0 menu after the session.
+const finishSessionV103Base=finishSession;
+finishSession=function(){
+  const wasDiag=state.session && state.session.kind==='diagnostic';
+  finishSessionV103Base();
+  if(wasDiag){
+    const menu=document.getElementById('t0Domains');
+    if(menu){menu.style.display='block';renderT0Tests();}
+  }
+};
+
+// Boss: open destination before question rendering.
+const startBossV103Base=startBoss;
+startBoss=function(domain,n,minutes,target){
+  showScreen('boss');
+  startBossV103Base(domain,n,minutes,target);
+  setTimeout(()=>document.getElementById('bossExercise')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+};
+
+// Series: same principle, and always force a visible first exercise.
+startLongSeries=function(n){
+  let pool=[];
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    pool.push(r<.34?genDeutsch():r<.67?genMath():genLogicV10());
+  }
+  showScreen('longseries');
+  renderSeriesDots(n,0);
+  startSession(pool,'seriesExercise','series');
+  setTimeout(()=>document.getElementById('seriesExercise')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+};
+startWeakSeries=function(n){
+  const weak=weakSkills(c=>c.priority==='P0',20);
+  let pool=[];
+  for(let i=0;i<n;i++){
+    const c=weak[i%Math.max(1,weak.length)];
+    if(c) pool.push(c.id[0]==='L'?genLogicV10(c.id):competenceMicroExercise(c));
+    else pool.push(genLogicV10());
+  }
+  showScreen('longseries');
+  renderSeriesDots(n,0);
+  startSession(pool,'seriesExercise','series');
+  setTimeout(()=>document.getElementById('seriesExercise')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+};
+
+// Competence packs: screen first, session second.
+startCompetencePack=function(id){
+  const pack=guaranteedExercisesForCompetence(id,6);
+  const target=id[0]==='D'?'deutsch':id[0]==='M'?'mathe':'logik';
+  showScreen(target);
+  startSession(pack,'domainExercise','training');
+  setTimeout(()=>document.getElementById('domainExercise')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+};
+
+// Daily plan: robust final router.
+startDailyStep=function(id,action,skill,min){
+  state.currentDailyStep={id,action,skill,min,date:today()};
+  ensureV10Runner();
+
+  if(action && action.startsWith('diag:')){ startT0DomainV10(action.split(':')[1]); return; }
+  if(action && action.startsWith('vocabtheme:')){
+    const tid=action.split(':')[1];
+    showScreen('vocab');
+    setTimeout(()=>startThemeLearnV10(tid),40);
+    return;
+  }
+  if(skill){
+    const pack=guaranteedExercisesForCompetence(skill,6).map(e=>{e.difficulty=targetDifficultyV10(skill);return e;});
+    showScreen('runner');
+    document.getElementById('v10RunnerTitle').textContent='🎯 '+(COMPETENCES.find(c=>c.id===skill)?.label||'Tagestraining');
+    document.getElementById('v10RunnerSub').textContent=`Tagesplan · ${min} Minuten · adaptiv`;
+    startSession(pack,'v10Exercise','training');
+    setTimeout(()=>document.getElementById('v10Exercise')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+    return;
+  }
+  const direct={
+    vocab:'vocab',logik:'logik',mathe:'mathe',deutsch:'deutsch',
+    longreading:'longreading',writing:'writing',resources:'resources',
+    bonusplay:'bonusplay',dictation:'dictation',freeanswer:'freeanswer'
+  };
+  if(action==='logik'){startLogicPackV10(null,12);return;}
+  if(direct[action]){showScreen(direct[action]);return;}
+  if(action && document.getElementById(action)){showScreen(action);return;}
+  showScreen('home');
+};
+
+// Static link audit: disable nothing silently. If a target is broken, show a visible message.
+function auditInteractiveV103(){
+  const problems=[];
+  document.querySelectorAll('#nav button').forEach(b=>{
+    const m=(b.getAttribute('onclick')||'').match(/showScreen\('([^']+)'/);
+    if(m && !document.getElementById(m[1]))problems.push('screen:'+m[1]);
+  });
+  document.querySelectorAll('button[onclick]').forEach(b=>{
+    const code=b.getAttribute('onclick')||'';
+    const m=code.match(/^([A-Za-z_$][\w$]*)\s*\(/);
+    if(m && typeof window[m[1]]!=='function')problems.push('function:'+m[1]);
+  });
+  if(problems.length) console.warn('V10.3 link audit:',[...new Set(problems)]);
+  return problems;
+}
+setTimeout(auditInteractiveV103,250);
+
+
+// ===================== V10.4 — VOCAB NAV + OPEN ANSWER CORRECTION =====================
+function clampVocabIndexV104(){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme);
+ if(!t)return;
+ state.vocabV10.learnIndex=Math.max(0,Math.min(t.words.length-1,state.vocabV10.learnIndex||0));
+}
+function vocabPrevV104(){clampVocabIndexV104();if(state.vocabV10.learnIndex>0){state.vocabV10.learnIndex--;renderThemeWordV10(true);}}
+function vocabNextV104(){clampVocabIndexV104();const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme);if(state.vocabV10.learnIndex<t.words.length-1){state.vocabV10.learnIndex++;const ts=vocabThemeStateV10(t.id);ts.learned=Math.max(ts.learned,state.vocabV10.learnIndex+1);saveSilent();renderThemeWordV10(true);}}
+function vocabGoV104(i){state.vocabV10.learnIndex=i;clampVocabIndexV104();renderThemeWordV10(true);}
+
+const renderThemeWordV104Base=renderThemeWordV10;
+renderThemeWordV10=function(autoAudio=false){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme);if(!t)return;
+ clampVocabIndexV104();
+ const i=state.vocabV10.learnIndex,w=themeWordsV10(t)[i],ts=vocabThemeStateV10(t.id);
+ document.getElementById('vocabLearnCard').innerHTML=`<div class="theme-level">${t.icon} ${t.title} · ${t.level} · Wort ${i+1}/${t.words.length}</div>
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
+ <button class="btn secondary" onclick="vocabPrevV104()" ${i===0?'disabled':''}>← Vorheriges Wort</button>
+ <div class="mastery-pill">${i+1} / ${t.words.length}</div>
+ <button class="btn secondary" onclick="vocabNextV104()" ${i===t.words.length-1?'disabled':''}>Nächstes Wort →</button></div>
+ <div class="theme-progress"><div style="width:${Math.round(100*(i+1)/t.words.length)}%"></div></div>
+ <div class="learn-word">${w.de}</div><div class="learn-fr">${w.fr}</div>
+ <div class="learn-example">${w.ex}</div>
+ <div class="learn-controls"><button class="btn secondary" onclick="speakGermanV10('${w.de.replace(/'/g,"\\'")}')">🔊 Wort</button>
+ <button class="btn secondary" onclick="speakGermanV10('${w.ex.replace(/'/g,"\\'")}')">🔊 Satz</button>
+ <button class="btn danger" onclick="rateThemeWordV10(0)">😵 Noch nicht</button><button class="btn" onclick="rateThemeWordV10(2)">🙂 Verstanden</button><button class="btn green" onclick="rateThemeWordV10(3)">🚀 Sicher</button></div>
+ <div class="grammar-box"><span class="badge gold">GRAMMATIK · ${t.grammar.join(' · ')}</span><h3 style="margin-top:8px">${t.grammarTitle}</h3><p>${t.grammarNote}</p>
+ <button class="btn secondary" onclick="openThemeGrammarV10('${t.id}')">Grammatik-Mini-Training</button></div>
+ <div style="display:flex;justify-content:space-between;gap:10px;margin-top:16px">
+ <button class="btn secondary" onclick="vocabPrevV104()" ${i===0?'disabled':''}>← Zurück</button>
+ <button class="btn secondary" onclick="backToVocabPathV10()">Themen</button>
+ <button class="btn" onclick="vocabNextV104()" ${i===t.words.length-1?'disabled':''}>Weiter →</button></div>`;
+ ts.learned=Math.max(ts.learned,i+1);saveSilent();
+ if(autoAudio)setTimeout(()=>speakGermanV10(w.de+'. '+w.ex),250);
+};
+
+// When rating the last word, finish; otherwise advance as before.
+rateThemeWordV10=function(r){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme),i=state.vocabV10.learnIndex,w=themeWordsV10(t)[i];
+ const s=vocabState(w.id);s.seen=(s.seen||0)+1;
+ if(r===0){s.level=Math.max(0,(s.level||0)-1);s.next=Date.now()+10*60*1000;}
+ if(r===2){s.correct=(s.correct||0)+1;s.level=Math.min(5,(s.level||0)+1);s.next=Date.now()+2*24*3600*1000;}
+ if(r===3){s.correct=(s.correct||0)+1;s.level=Math.min(6,(s.level||0)+2);s.next=Date.now()+5*24*3600*1000;}
+ const ts=vocabThemeStateV10(t.id);ts.learned=Math.max(ts.learned,i+1);ts.lastDate=today();state.xp+=r===0?2:r===2?8:12;
+ if(i>=t.words.length-1){
+   ts.learned=t.words.length;save();
+   document.getElementById('vocabLearnCard').innerHTML=`<h2>🏆 Thema gelernt!</h2><p>${t.title}: ${t.words.length} Wörter wurden durchgearbeitet.</p><button class="btn gold" onclick="startThemeTestV10('${t.id}')">🧪 Thematischer Test</button> <button class="btn secondary" onclick="state.vocabV10.learnIndex=${Math.max(0,t.words.length-1)};renderThemeWordV10(false)">← Letztes Wort</button> <button class="btn secondary" onclick="backToVocabPathV10()">Themen</button>`;
+   return;
+ }
+ state.vocabV10.learnIndex=i+1;saveSilent();renderThemeWordV10(true);
+};
+
+// Conservative German correction: preserve Alicia's sentence whenever it answers the task.
+// This is deterministic/offline; it corrects common morphology, capitalization, punctuation,
+// verb-second / weil order, and known task-specific formulations without pretending to be an LLM.
+function normalizeGermanV104(raw){
+ let s=raw.trim().replace(/\s+/g,' ');
+ if(!s)return s;
+ s=s.charAt(0).toUpperCase()+s.slice(1);
+ s=s.replace(/\bi\b/g,'ich').replace(/\bIch bin habe\b/gi,'Ich habe');
+ s=s.replace(/\bweil es hat ([^,.!?]+)\b/gi,'weil es $1 hat');
+ s=s.replace(/\bweil sie hat ([^,.!?]+)\b/gi,'weil sie $1 hat');
+ s=s.replace(/\bweil er hat ([^,.!?]+)\b/gi,'weil er $1 hat');
+ s=s.replace(/\bweil es ist ([^,.!?]+)\b/gi,'weil es $1 ist');
+ s=s.replace(/\bweil sie ist ([^,.!?]+)\b/gi,'weil sie $1 ist');
+ s=s.replace(/\bweil er ist ([^,.!?]+)\b/gi,'weil er $1 ist');
+ s=s.replace(/\bweil ich habe ([^,.!?]+)\b/gi,'weil ich $1 habe');
+ s=s.replace(/\bweil ich bin ([^,.!?]+)\b/gi,'weil ich $1 bin');
+ s=s.replace(/\bweil wir haben ([^,.!?]+)\b/gi,'weil wir $1 haben');
+ s=s.replace(/\bweil wir sind ([^,.!?]+)\b/gi,'weil wir $1 sind');
+ s=s.replace(/\bweil ([^,.!?]+) kann\b/gi,'weil $1 kann'); // leave ambiguous clauses unchanged
+ if(!/[.!?]$/.test(s))s+='.';
+ return s;
+}
+function taskRelevanceV104(t,raw){
+ const low=raw.toLowerCase(),hits=(t.keywords||[]).filter(k=>low.includes(k.toLowerCase()));
+ if(hits.length)return Math.min(1,hits.length/Math.max(1,Math.min(2,(t.keywords||[]).length)));
+ // broad semantic anchors for known open tasks
+ const anchors={
+  F08:['nacht','nachts','aktiv','schläft','futter','ruhe','tier'],
+  F09:['papier','streifen','sort','ordn','sortier'],
+  F10:['wort','wörter','liste','heft','lern','schreib'],
+  F11:['lang','länge','cm','meter','messen'],
+  F12:['euro','€','kosten','preis','geld'],
+  F13:['weil','wichtig','grund'],
+  F14:['dass'],
+  F15:['zuerst','danach','dann','schließlich']
+ };
+ const a=anchors[t.id]||[];
+ return a.some(x=>low.includes(x))?.65:0;
+}
+function correctedOwnSentenceV104(t,raw){
+ let s=normalizeGermanV104(raw);
+ // Task-specific minimal corrections preserving the user's wording where possible.
+ if(t.id==='F08'){
+   s=s.replace(/\bweil es Angst hat\b/gi,'weil es nachts aktiv ist');
+   s=s.replace(/\bWeil es Angst hat\b/g,'Weil es nachts aktiv ist');
+ }
+ return s;
+}
+checkFreeAnswer=function(){
+ const t=freeCurrent,raw=document.getElementById('freeText').value;
+ if(!raw.trim()){document.getElementById('freeFeedback').innerHTML='<p class="v10-wrong">Écris d’abord une réponse.</p>';return;}
+ const a=germanOpenAnalysisV10(t,raw),rel=taskRelevanceV104(t,raw),corrected=correctedOwnSentenceV104(t,raw);
+ // If relevance is weak, content cannot receive a high score even if the German is grammatical.
+ if(rel<.4){a.total=Math.min(a.total,45);a.content=Math.min(a.content,10);}
+ const changed=corrected.trim()!==raw.trim();
+ state.freeAnswers[t.id]={text:raw,corrected,score:a.total,date:today()};record(t.skill,a.total>=75);state.xp+=Math.round(a.total/4);
+ const label=a.total>=85?'✅ Sehr gut':a.total>=65?'🟠 Teilweise richtig':'🔴 Noch zu verbessern';
+ let responseBlock='';
+ if(rel>=.4){
+   responseBlock=`<div class="v10-answerline"><strong>Ta phrase :</strong><br>${raw.replace(/</g,'&lt;')}</div>
+   <div class="v10-answerline"><span class="v10-right">Ta phrase corrigée :</span><br>${corrected.replace(/</g,'&lt;')}</div>
+   <p class="tiny">${changed?'J’ai gardé ta formulation et corrigé uniquement ce qui devait l’être.':'Ta phrase est déjà correctement formulée ; vérifie surtout le contenu attendu.'}</p>`;
+ } else {
+   responseBlock=`<div class="v10-answerline"><strong>Ta phrase :</strong><br>${raw.replace(/</g,'&lt;')}</div>
+   <div class="v10-explain"><strong>⚠️ Le problème principal n’est pas seulement la grammaire :</strong> ta réponse ne répond pas suffisamment à la question.</div>
+   <div class="v10-answerline"><span class="v10-right">Réponse qui répond à la question :</span><br>${t.model}</div>`;
+ }
+ document.getElementById('freeFeedback').innerHTML=`<div class="v10-correction ${a.total>=75?'good':'bad'}">
+ <div class="open-score">${a.total}%</div><h3>${label}</h3>
+ <div class="feedback-grid"><div class="feedback-cell"><strong>Inhalt</strong><br>${a.content}/40</div><div class="feedback-cell"><strong>Grammatik</strong><br>${a.grammar}/15</div><div class="feedback-cell"><strong>Satzbau</strong><br>${a.sentence}/15</div><div class="feedback-cell"><strong>Wortschatz</strong><br>${a.vocab}/15</div><div class="feedback-cell"><strong>Länge</strong><br>${a.length}/15</div></div>
+ ${responseBlock}
+ ${a.note.length?`<div class="v10-explain"><strong>À travailler :</strong><ul>${a.note.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+ ${a.missing.length&&rel>=.4?`<p><strong>Éléments importants à ajouter :</strong> ${a.missing.join(' · ')}</p>`:''}
+ ${rel>=.4?`<details style="margin-top:10px"><summary>Voir aussi une réponse modèle</summary><div class="v10-answerline">${t.model}</div></details>`:''}
+ <div class="v10-retry"><button class="btn secondary" onclick="document.getElementById('freeText').focus()">✍️ Corriger / améliorer moi-même</button><button class="btn" onclick="renderFree(freeFilter)">Neue Aufgabe</button></div></div>`;
+ save();
+};
+
+
+// ===================== V10.5 — UNIVERSAL EXERCISE NAVIGATION =====================
+state.v105 = state.v105 || {version:'10.5'};
+
+function v105GetExercise(eid){
+  return EXERCISES.find(x=>x.id===eid) || (state.session&&state.session.dynamic&&state.session.dynamic[eid]) || null;
+}
+function v105CanSkip(){
+  return !!(state.session && !['diagnostic','boss','exam'].includes(state.session.kind));
+}
+function v105SessionTotal(){ return state.session ? state.session.ids.length : 0; }
+function v105CurrentPos(){ return state.session ? (state.session.pos||0) : 0; }
+
+startSession=function(exercises,boxId,kind='training'){
+  const dyn={};
+  exercises.forEach(e=>{if(!EXERCISES.find(x=>x.id===e.id))dyn[e.id]=e;});
+  state.session={
+    ids:exercises.map(e=>e.id),
+    pos:0,
+    correct:0,
+    boxId,
+    kind,
+    dynamic:dyn,
+    answered:{},
+    startTs:Date.now()
+  };
+  saveSilent();
+  showSessionCurrent();
+};
+
+function v105NavHTML(boxId){
+  if(!state.session)return '';
+  const s=state.session,pos=s.pos||0,total=s.ids.length;
+  const answered=!!s.answered[pos];
+  const canNext=answered || v105CanSkip();
+  return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 14px">
+    <button class="btn secondary" onclick="prevExerciseV105()" ${pos<=0?'disabled':''}>← Vorherige Aufgabe</button>
+    <span class="badge gold">Aufgabe ${pos+1} / ${total}</span>
+    <button class="btn secondary" onclick="nextExerciseV105()" ${pos>=total-1 || !canNext?'disabled':''}>Nächste Aufgabe →</button>
+  </div>`;
+}
+
+showSessionCurrent=function(){
+  if(!state.session)return;
+  const s=state.session,pos=s.pos||0;
+  if(pos>=s.ids.length){finishSession();return;}
+  const e=v105GetExercise(s.ids[pos]);
+  if(!e){s.pos++;showSessionCurrent();return;}
+  const box=document.getElementById(s.boxId);
+  if(!box){console.error('Missing exercise box',s.boxId);return;}
+  box.style.display='block';
+
+  const prior=s.answered[pos];
+  if(prior){
+    renderExerciseReviewV105(s.boxId,e,prior);
+  }else{
+    renderExercise(s.boxId,e,null,['exam','diagnostic','boss'].includes(s.kind));
+    const fresh=document.getElementById(s.boxId);
+    fresh.insertAdjacentHTML('afterbegin',v105NavHTML(s.boxId));
+  }
+  if(s.kind==='series')renderSeriesDots(s.ids.length,pos);
+};
+
+function renderExerciseReviewV105(boxId,e,resp){
+  if(e.generated)e.answer=resolveGeneratedAnswer(e);
+  const box=document.getElementById(boxId),right=e.options[e.answer],chosen=e.options[resp.choice];
+  box.innerHTML=`${v105NavHTML(boxId)}
+  <span class="badge">${e.title}</span><span class="badge ${e.difficulty>=2?'k5':''}" style="margin-left:6px">Level ${e.difficulty}</span>
+  <h2 style="margin-top:12px;white-space:pre-line">${e.question}</h2>
+  <div>${e.options.map((o,i)=>`<button class="answer ${i===e.answer?'correct':i===resp.choice&&!resp.ok?'wrong':''}" disabled>${o}</button>`).join('')}</div>
+  <div class="v10-correction ${resp.ok?'good':'bad'}">
+    <div style="font-size:20px;font-weight:950">${resp.ok?'✅ Richtig / Correct':'❌ Nicht richtig / À corriger'}</div>
+    <div class="v10-answerline"><span class="${resp.ok?'v10-right':'v10-wrong'}">Ta réponse :</span> ${chosen}</div>
+    <div class="v10-answerline"><span class="v10-right">Bonne réponse :</span> ${right}</div>
+    <div class="v10-explain"><strong>Pourquoi ?</strong><br>${explainExerciseV10(e)}</div>
+  </div>`;
+};
+
+function prevExerciseV105(){
+  if(!state.session)return;
+  if((state.session.pos||0)>0){state.session.pos--;saveSilent();showSessionCurrent();setTimeout(()=>document.getElementById(state.session.boxId)?.scrollIntoView({behavior:'smooth',block:'start'}),60);}
+}
+function nextExerciseV105(){
+  if(!state.session)return;
+  const s=state.session,pos=s.pos||0;
+  if(!s.answered[pos] && !v105CanSkip())return;
+  if(pos>=s.ids.length-1){
+    if(s.answered[pos])finishSession();
+    return;
+  }
+  s.pos++;saveSilent();showSessionCurrent();setTimeout(()=>document.getElementById(s.boxId)?.scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+nextInSession=function(){ nextExerciseV105(); };
+
+answer=function(boxId,eid,choice,exam=false){
+  const s=state.session,e=v105GetExercise(eid);if(!e)return;
+  if(e.generated)e.answer=resolveGeneratedAnswer(e);
+  const pos=s?(s.pos||0):0;
+
+  // Prevent double scoring if returning to an already answered question.
+  if(s && s.answered[pos]){renderExerciseReviewV105(boxId,e,s.answered[pos]);return;}
+
+  const ok=choice===e.answer,chosen=e.options[choice],right=e.options[e.answer];
+  document.querySelectorAll(`#${boxId} .answer`).forEach((b,i)=>{
+    b.disabled=true;if(i===e.answer)b.classList.add('correct');else if(i===choice)b.classList.add('wrong');
+  });
+
+  record(e.skill,ok);
+  if(!state.completedExercises.includes(e.id))state.completedExercises.push(e.id);
+  if(s){
+    s.answered[pos]={choice,ok};
+    s.correct+=(ok?1:0);
+  }
+
+  document.getElementById(boxId+'fb').innerHTML=`<div class="v10-correction ${ok?'good':'bad'}">
+   <div style="font-size:20px;font-weight:950">${ok?'✅ Richtig / Correct':'❌ Nicht richtig / À corriger'}</div>
+   <div class="v10-answerline"><span class="${ok?'v10-right':'v10-wrong'}">Ta réponse :</span> ${chosen}</div>
+   <div class="v10-answerline"><span class="v10-right">Bonne réponse :</span> ${right}</div>
+   <div class="v10-explain"><strong>Pourquoi ?</strong><br>${explainExerciseV10(e)}</div>
+   <div class="v10-retry">${!['diagnostic','boss','exam'].includes(s?.kind||'training')&&!ok?`<button class="btn secondary" onclick="startSkillRetryV10('${e.skill}')">🔁 Exercice similaire</button>`:''}
+   <button class="btn" onclick="nextExerciseV105()">${pos>=((s?.ids.length||1)-1)?'🏁 Terminer':'Nächste Aufgabe →'}</button>
+   ${pos>0?'<button class="btn secondary" onclick="prevExerciseV105()">← Zurück</button>':''}</div></div>`;
+
+  // Update nav buttons at top immediately.
+  const box=document.getElementById(boxId);
+  const oldNav=box.querySelector(':scope > div:first-child');
+  if(oldNav && oldNav.querySelector('.badge')) oldNav.outerHTML=v105NavHTML(boxId);
+
+  if(typeof coachShow==='function'){
+    state.coach.correctStreak=ok?(state.coach.correctStreak||0)+1:0;
+    coachShow(ok?'correct':'wrong');
+  }
+  save();
+};
+
+// Finish session from answered map, not from a mutated index.
+finishSession=function(){
+  if(!state.session)return;
+  if(state.session.kind==='boss'){finishBoss(false);return;}
+  const s=state.session;
+  const answeredCount=Object.keys(s.answered||{}).length;
+  const pct=s.ids.length?Math.round(100*s.correct/s.ids.length):0;
+  if(s.kind==='series'){state.longSeriesBest[s.ids.length]=Math.max(state.longSeriesBest[s.ids.length]||0,pct);renderSeriesDots(s.ids.length,s.ids.length);}
+  if(s.kind==='diagnostic' && state.v10diag.current){
+    const id=state.v10diag.current;state.v10diag.done[id]=true;state.v10diag.scores[id]=pct;state.v10diag.current=null;
+  }
+  const box=document.getElementById(s.boxId);box.style.display='block';
+  box.innerHTML=`<h2>🏁 ${s.kind==='diagnostic'?'Diagnostic terminé':'Challenge beendet'}</h2><div class="big">${pct}%</div>
+  <p>${s.correct}/${s.ids.length} richtig · ${answeredCount}/${s.ids.length} beantwortet</p>
+  <p class="muted">${s.kind==='diagnostic'?'La matrice vient d’être actualisée : les prochaines missions s’adaptent automatiquement.':'Der Coach hat die Matrix aktualisiert.'}</p>
+  ${s.kind==='diagnostic'?'<button class="btn" onclick="showScreen(\'t0tests\')">Diagnostic Center</button>':''}`;
+  state.session=null;
+  if(state.currentDailyStep)completeCurrentDailyStep();
+  checkTrophies();save();
+};
+
+// Universal arena launcher fixes Mathematik/Deutsch/Logik hidden-container issue.
+startDomain=function(domain,sub){
+  let pool=EXERCISES.filter(e=>e.domain===domain && (!sub || e.title.toLowerCase().includes(sub.toLowerCase()) ||
+    (sub==='Schul'&&e.id.startsWith('DI')) || (sub==='Zahlen'&&e.id.startsWith('MN')) ||
+    (sub==='Sach'&&e.id.startsWith('MS')) || (sub==='Raum'&&e.id.startsWith('MG')) ||
+    (sub==='Größen'&&(e.id.startsWith('MM')||e.id.startsWith('MD')))));
+  if(!pool.length)pool=EXERCISES.filter(e=>e.domain===domain);
+
+  // Add dynamic material so every button always has enough exercises.
+  while(pool.length<10){
+    if(domain==='Mathematik')pool.push(genMath());
+    else if(domain==='Logik')pool.push(genLogicV10());
+    else pool.push(genDeutsch());
+  }
+  pool=shuffle(pool).slice(0,10);
+
+  ensureV10Runner();
+  showScreen('runner');
+  document.getElementById('v10RunnerTitle').textContent=
+    domain==='Mathematik'?'🔢 Mathematik auf Deutsch':
+    domain==='Logik'?'🧠 Logik Lab':'🇩🇪 Deutsch Arena';
+  document.getElementById('v10RunnerSub').textContent=(sub||'Mix')+' · 10 Aufgaben · navigation ← →';
+  startSession(pool,'v10Exercise','training');
+  setTimeout(()=>document.getElementById('v10Exercise')?.scrollIntoView({behavior:'smooth',block:'start'}),70);
+};
+
+// Logic hub also uses universal runner.
+startLogicPackV10=function(skill=null,n=12){
+  const pack=logicPackV10(n,skill);
+  ensureV10Runner();showScreen('runner');
+  document.getElementById('v10RunnerTitle').textContent='🧠 Logik Datenbank';
+  document.getElementById('v10RunnerSub').textContent=`${n} exercices adaptatifs · ${skill||'mix logique'} · navigation ← →`;
+  startSession(pack,'v10Exercise','training');
+};
+
+// Series already visible but gets previous/next through universal engine.
+startLongSeries=function(n){
+  let pool=[];
+  for(let i=0;i<n;i++){const r=Math.random();pool.push(r<.34?genDeutsch():r<.67?genMath():genLogicV10());}
+  showScreen('longseries');renderSeriesDots(n,0);startSession(pool,'seriesExercise','series');
+};
+startWeakSeries=function(n){
+  const weak=weakSkills(c=>c.priority==='P0',20);let pool=[];
+  for(let i=0;i<n;i++){const c=weak[i%Math.max(1,weak.length)];pool.push(c?(c.id[0]==='L'?genLogicV10(c.id):competenceMicroExercise(c)):genLogicV10());}
+  showScreen('longseries');renderSeriesDots(n,0);startSession(pool,'seriesExercise','series');
+};
+
+// Lesson competence packs use the universal runner too.
+startCompetencePack=function(id){
+  const pack=guaranteedExercisesForCompetence(id,6);
+  ensureV10Runner();showScreen('runner');
+  document.getElementById('v10RunnerTitle').textContent='📘 '+(COMPETENCES.find(c=>c.id===id)?.label||id);
+  document.getElementById('v10RunnerSub').textContent='6 Aufgaben · navigation ← →';
+  startSession(pack,'v10Exercise','training');
+};
+
+// Audit all static buttons again.
+setTimeout(()=>{
+  const missing=[];
+  document.querySelectorAll('button[onclick]').forEach(b=>{
+    const m=(b.getAttribute('onclick')||'').match(/^([A-Za-z_$][\w$]*)\s*\(/);
+    if(m && typeof window[m[1]]!=='function')missing.push(m[1]);
+  });
+  if(missing.length)console.warn('V10.5 missing button handlers',[...new Set(missing)]);
+},300);
+
+
+// ===================== V10.6 — CLEAR GERMAN VOICE =====================
+state.voiceV106 = state.voiceV106 || {preferredName:null,rate:0.88,pitch:1.0,volume:1};
+
+function germanVoicesV106(){
+  if(!('speechSynthesis' in window)) return [];
+  return speechSynthesis.getVoices().filter(v => (v.lang||'').toLowerCase().startsWith('de'));
+}
+function scoreGermanVoiceV106(v){
+  const n=(v.name||'').toLowerCase();
+  let s=0;
+  if((v.lang||'').toLowerCase()==='de-de') s+=30;
+  if(v.localService) s+=8;
+  // Prefer higher-quality Apple / system voices when available.
+  if(/siri|enhanced|premium|neural|natural/.test(n)) s+=35;
+  if(/anna|petra|viktor|markus|yannick|helena|martin/.test(n)) s+=18;
+  // De-prioritise obvious compact / legacy voices if present.
+  if(/compact|basic|espeak|mbrola/.test(n)) s-=25;
+  return s;
+}
+function bestGermanVoiceV106(){
+  const voices=germanVoicesV106();
+  if(!voices.length) return null;
+  if(state.voiceV106.preferredName){
+    const chosen=voices.find(v=>v.name===state.voiceV106.preferredName);
+    if(chosen) return chosen;
+  }
+  return [...voices].sort((a,b)=>scoreGermanVoiceV106(b)-scoreGermanVoiceV106(a))[0];
+}
+function speakGermanCleanV106(txt,opts={}){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(String(txt||'').trim());
+  u.lang='de-DE';
+  u.rate=opts.rate ?? state.voiceV106.rate ?? 0.88;
+  u.pitch=opts.pitch ?? state.voiceV106.pitch ?? 1.0;
+  u.volume=opts.volume ?? state.voiceV106.volume ?? 1;
+  const v=bestGermanVoiceV106();
+  if(v)u.voice=v;
+  // Small start delay is more reliable on iPad/Safari after a previous utterance.
+  setTimeout(()=>speechSynthesis.speak(u),45);
+}
+function populateVoiceSelectorV106(){
+  const sel=document.getElementById('voiceSelectV106');
+  if(!sel)return;
+  const vs=germanVoicesV106();
+  sel.innerHTML=vs.length?vs.sort((a,b)=>scoreGermanVoiceV106(b)-scoreGermanVoiceV106(a)).map((v,i)=>`<option value="${v.name.replace(/"/g,'&quot;')}" ${state.voiceV106.preferredName===v.name?'selected':''}>${i===0?'⭐ ':''}${v.name} (${v.lang})</option>`).join(''):'<option>Aucune voix allemande détectée</option>';
+  if(!state.voiceV106.preferredName && vs.length){
+    state.voiceV106.preferredName=bestGermanVoiceV106()?.name||vs[0].name;saveSilent();
+    sel.value=state.voiceV106.preferredName;
+  }
+}
+function chooseVoiceV106(name){state.voiceV106.preferredName=name;save();speakGermanCleanV106('Hallo Alicia! Diese Stimme begleitet dich beim Deutschlernen.');}
+function testVoiceV106(){speakGermanCleanV106('Hallo Alicia! Heute trainieren wir Deutsch. Du schaffst das!');}
+
+// Replace all German speech entry points with the cleaner global voice.
+speakGermanV10=function(txt){speakGermanCleanV106(txt);};
+coachSpeak=function(txt){speakGermanCleanV106(txt,{rate:0.92,pitch:1.02});};
+
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged=()=>{populateVoiceSelectorV106();};
+}
+
+// Inject simple voice control into Wortschatz header.
+function ensureVoiceUIV106(){
+  if(document.getElementById('voicePanelV106'))return;
+  const hero=document.querySelector('#vocab .vocab-hero');
+  if(hero){
+    const d=document.createElement('div');
+    d.id='voicePanelV106';d.className='card';d.style.marginTop='14px';
+    d.innerHTML=`<h3>🔊 Deutsche Stimme</h3><p class="muted">Le site choisit automatiquement la voix allemande la plus naturelle disponible sur cet iPad. Tu peux aussi en choisir une autre.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select class="input" id="voiceSelectV106" style="max-width:420px;margin:0" onchange="chooseVoiceV106(this.value)"></select>
+      <button class="btn secondary" onclick="testVoiceV106()">▶ Stimme testen</button>
+    </div>`;
+    hero.appendChild(d);
+    populateVoiceSelectorV106();
+  }
+}
+
+// Use clearer phrasing with pauses for vocabulary auto-read.
+const renderThemeWordV106Base=renderThemeWordV10;
+renderThemeWordV10=function(autoAudio=false){
+  renderThemeWordV106Base(false);
+  if(autoAudio){
+    const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme);
+    if(t){
+      const w=themeWordsV10(t)[state.vocabV10.learnIndex];
+      setTimeout(()=>speakGermanCleanV106(w.de+'.   '+w.ex,{rate:0.84}),260);
+    }
+  }
+};
+
+// Refresh voice UI when vocabulary is opened.
+const showScreenV106Base=showScreen;
+showScreen=function(id,btn){
+  showScreenV106Base(id,btn);
+  if(id==='vocab')setTimeout(()=>{ensureVoiceUIV106();populateVoiceSelectorV106();},60);
+};
+
+
+// ===================== V10.7 — UNIVERSAL OPTIONAL AUDIO =====================
+state.audioV107 = state.audioV107 || {enabled:true};
+
+function audioBtnV107(text,label='🔊'){
+  const safe=String(text||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');
+  return `<button class="btn secondary" style="padding:6px 9px;margin-left:6px" onclick="speakGermanCleanV106('${safe}')">${label}</button>`;
+}
+
+// Exercises: question + answer choices can be read aloud on demand.
+const renderExerciseV107Base=renderExercise;
+renderExercise=function(boxId,e,after=null,exam=false){
+  if(e.generated)e.answer=resolveGeneratedAnswer(e);
+  const box=document.getElementById(boxId);box.style.display='block';
+  if(state.session && e.generated){state.session.dynamic=state.session.dynamic||{};state.session.dynamic[e.id]=e;}
+  box.innerHTML=`<span class="badge">${e.title}</span><span class="badge ${e.difficulty>=2?'k5':''}" style="margin-left:6px">Level ${e.difficulty}</span>
+  <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">
+    <h2 style="margin-top:12px;white-space:pre-line;flex:1">${e.question}</h2>
+    ${audioBtnV107(e.question,'🔊 Frage')}
+  </div>
+  <div>${e.options.map((o,i)=>`<div style="display:flex;gap:6px;align-items:center"><button class="answer" id="${boxId}a${i}" onclick="answer('${boxId}','${e.id}',${i},${exam?'true':'false'})">${o}</button>${audioBtnV107(o,'🔊')}</div>`).join('')}</div>
+  <div class="joker-duo"><button class="btn joker-partial" onclick="usePartialJoker('${boxId}','${e.id}')">💡 Petit indice (−2 XP)</button><button class="btn joker-full" onclick="useFullJoker('${boxId}','${e.id}')">🃏 Traduction complète (−5 XP)</button></div>
+  <div id="${boxId}joker" style="display:none"></div><div id="${boxId}fb"></div>`;
+  box.dataset.after=after||'';
+};
+
+// Review mode: question, answers and correction audio.
+const renderExerciseReviewV107Base=renderExerciseReviewV105;
+renderExerciseReviewV105=function(boxId,e,resp){
+  if(e.generated)e.answer=resolveGeneratedAnswer(e);
+  const box=document.getElementById(boxId),right=e.options[e.answer],chosen=e.options[resp.choice];
+  box.innerHTML=`${v105NavHTML(boxId)}
+  <span class="badge">${e.title}</span><span class="badge ${e.difficulty>=2?'k5':''}" style="margin-left:6px">Level ${e.difficulty}</span>
+  <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap"><h2 style="margin-top:12px;white-space:pre-line;flex:1">${e.question}</h2>${audioBtnV107(e.question,'🔊 Frage')}</div>
+  <div>${e.options.map((o,i)=>`<div style="display:flex;gap:6px;align-items:center"><button class="answer ${i===e.answer?'correct':i===resp.choice&&!resp.ok?'wrong':''}" disabled>${o}</button>${audioBtnV107(o,'🔊')}</div>`).join('')}</div>
+  <div class="v10-correction ${resp.ok?'good':'bad'}">
+    <div style="font-size:20px;font-weight:950">${resp.ok?'✅ Richtig / Correct':'❌ Nicht richtig / À corriger'}</div>
+    <div class="v10-answerline"><span class="${resp.ok?'v10-right':'v10-wrong'}">Ta réponse :</span> ${chosen}</div>
+    <div class="v10-answerline"><span class="v10-right">Bonne réponse :</span> ${right} ${audioBtnV107(right,'🔊 Lösung')}</div>
+    <div class="v10-explain"><strong>Pourquoi ?</strong><br>${explainExerciseV10(e)}</div>
+  </div>`;
+};
+
+// Free answers: prompt audio + corrected answer/model audio.
+const renderFreeV107Base=renderFree;
+renderFree=function(filter=freeFilter){
+  renderFreeV107Base(filter);
+  const t=freeCurrent,box=document.getElementById('freeBox');
+  if(t && box){
+    const heading=box.querySelector('h2');
+    if(heading && !box.querySelector('.free-audio-v107')){
+      const b=document.createElement('button');
+      b.className='btn secondary free-audio-v107';b.style.marginBottom='10px';b.textContent='🔊 Consigne';
+      b.onclick=()=>speakGermanCleanV106(t.prompt);
+      heading.insertAdjacentElement('afterend',b);
+    }
+  }
+};
+
+const checkFreeAnswerV107Base=checkFreeAnswer;
+checkFreeAnswer=function(){
+  checkFreeAnswerV107Base();
+  const t=freeCurrent,fb=document.getElementById('freeFeedback');
+  if(!t||!fb)return;
+  const saved=state.freeAnswers[t.id];
+  if(saved){
+    const wrap=document.createElement('div');wrap.style.marginTop='10px';
+    let html='';
+    if(saved.corrected) html+=`<button class="btn secondary" onclick="speakGermanCleanV106('${String(saved.corrected).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">🔊 Ma phrase corrigée</button> `;
+    if(t.model) html+=`<button class="btn secondary" onclick="speakGermanCleanV106('${String(t.model).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">🔊 Réponse modèle</button>`;
+    wrap.innerHTML=html;fb.appendChild(wrap);
+  }
+};
+
+// Long reading: title/text/questions audio on demand.
+const openLongReadingV107Base=openLongReading;
+openLongReading=function(id){
+  openLongReadingV107Base(id);
+  const v=document.getElementById('longReadingViewer'),lr=LONG_READINGS.find(x=>x.id===id);
+  if(v&&lr&&!v.querySelector('.lr-audio-v107')){
+    const bar=document.createElement('div');bar.className='lr-audio-v107';bar.style.margin='10px 0';
+    bar.innerHTML=`${audioBtnV107(lr.text,'🔊 Texte complet')}`;
+    v.insertBefore(bar,v.children[1]||null);
+    v.querySelectorAll('h3').forEach((h,i)=>{ if(lr.questions[i]) h.insertAdjacentHTML('beforeend',' '+audioBtnV107(lr.questions[i][0],'🔊'));});
+  }
+};
+
+// Writing tasks: prompt audio.
+const openWritingV107Base=openWriting;
+openWriting=function(id){
+  openWritingV107Base(id);
+  const task=WRITING_TASKS.find(x=>x.id===id),ed=document.getElementById('writingEditor');
+  if(task&&ed&&!ed.querySelector('.writing-audio-v107')){
+    const b=document.createElement('div');b.className='writing-audio-v107';b.style.margin='8px 0';
+    b.innerHTML=audioBtnV107(task.prompt,'🔊 Consigne');
+    ed.insertBefore(b,ed.children[2]||null);
+  }
+};
+
+// Lessons: read rule / example / memo.
+const openLessonV107Base=openLesson;
+openLesson=function(id){
+  openLessonV107Base(id);
+  const c=COMPETENCES.find(x=>x.id===id),parts=c?lessonContent(c):null,viewer=document.getElementById('lessonViewer');
+  if(viewer&&parts&&!viewer.querySelector('.lesson-audio-v107')){
+    const bar=document.createElement('div');bar.className='lesson-audio-v107';bar.style.margin='8px 0';
+    bar.innerHTML=`${audioBtnV107(parts[0],'🔊 Regel')} ${audioBtnV107(parts[1],'🔊 Beispiel')} ${audioBtnV107(parts[2],'🔊 Merksatz')}`;
+    viewer.insertBefore(bar,viewer.children[2]||null);
+  }
+};
+
+// Projects: prompt/mission audio.
+const openProjectV107Base=openProject;
+openProject=function(id){
+  openProjectV107Base(id);
+  const p=PROJECTS.find(x=>x.id===id),ed=document.getElementById('projectEditor');
+  if(p&&ed&&!ed.querySelector('.project-audio-v107')){
+    const txt=[p.title,p.question,p.task,p.steps?.join('. ')].filter(Boolean).join('. ');
+    const b=document.createElement('div');b.className='project-audio-v107';b.style.margin='8px 0';b.innerHTML=audioBtnV107(txt,'🔊 Mission');
+    ed.insertBefore(b,ed.children[2]||null);
+  }
+};
+
+// Dictation already uses audio, no change needed.
+// Vocabulary already has word and sentence audio.
+
+
+// ===================== V10.8 — GLOBAL START BUTTON / SCREEN FIX =====================
+state.v108 = state.v108 || {version:'10.8', globalStartFix:true};
+
+/*
+  Core fix:
+  A lot of old buttons call startSession() directly with an exercise box that
+  lives inside another hidden screen. From now on startSession itself first
+  activates the screen containing that box. This makes ALL legacy Start /
+  Challenge / Mini-Check buttons visible without having to patch them one by one.
+*/
+startSession=function(exercises,boxId,kind='training'){
+  if(!Array.isArray(exercises)) exercises=[exercises].filter(Boolean);
+  exercises=exercises.filter(Boolean);
+  if(!exercises.length){
+    alert('Für dieses Training sind gerade keine Aufgaben verfügbar.');
+    return;
+  }
+
+  const box=document.getElementById(boxId);
+  if(!box){
+    console.error('V10.8: exercise box not found:',boxId);
+    alert('Dieses Training konnte nicht geöffnet werden. Bitte Seite neu laden.');
+    return;
+  }
+
+  const parentScreen=box.closest('.screen');
+  if(parentScreen && !parentScreen.classList.contains('active')){
+    showScreen(parentScreen.id);
+  }
+
+  const dyn={};
+  exercises.forEach(e=>{if(e && !EXERCISES.find(x=>x.id===e.id))dyn[e.id]=e;});
+  state.session={
+    ids:exercises.map(e=>e.id),
+    pos:0,
+    correct:0,
+    boxId,
+    kind,
+    dynamic:dyn,
+    answered:{},
+    startTs:Date.now()
+  };
+  saveSilent();
+  showSessionCurrent();
+
+  setTimeout(()=>{
+    const target=document.getElementById(boxId);
+    if(target){
+      target.style.display='block';
+      target.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  },70);
+};
+
+// Daily Quest had its own legacy direct start buttons. Rebuild them with a robust launcher.
+function startDailyQuestV108(eid){
+  const e=EXERCISES.find(x=>x.id===eid);
+  if(!e){alert('Aufgabe nicht gefunden.');return;}
+  showScreen('daily');
+  startSession([e],'dailyExercise','training');
+}
+renderDaily=function(){
+  const picks=dailyPicks();
+  const list=document.getElementById('dailyList');
+  if(list)list.innerHTML=picks.map((x,i)=>`<div class="quest">
+    <div><strong>${['📖','🔤','✍️','🔢','🧠'][i]} ${x.e.title}</strong>
+    <div class="muted">${x.minutes} min · ${x.e.skill}</div></div>
+    <button class="btn" onclick="startDailyQuestV108('${x.e.id}')">Start</button>
+  </div>`).join('');
+  const h=document.getElementById('homeQuests');
+  if(h)h.innerHTML=picks.slice(0,3).map(x=>`<div class="quest"><div><strong>${x.e.title}</strong><div class="muted">${x.e.skill}</div></div><span class="badge">adaptive</span></div>`).join('');
+};
+
+// Reliable T0 14-day block launcher.
+startT0Day=function(){
+  state.t0Started=true;
+  const arr=t0FocusExercises(state.t0Day);
+  showScreen('t0');
+  startSession(arr,'t0Exercise','diagnostic');
+};
+
+// Reliable mixed-test launcher.
+startMixedTest=function(){
+  const p=shuffle([...EXERCISES]).slice(0,20);
+  showScreen('deutsch');
+  startSession(p,'domainExercise','exam');
+};
+
+// Make every arena Start button open the universal visible runner.
+startDomain=function(domain,sub){
+  let pool=EXERCISES.filter(e=>e.domain===domain && (!sub ||
+    e.title.toLowerCase().includes(String(sub).toLowerCase()) ||
+    (sub==='Schul'&&e.id.startsWith('DI')) ||
+    (sub==='Zahlen'&&e.id.startsWith('MN')) ||
+    (sub==='Sach'&&e.id.startsWith('MS')) ||
+    (sub==='Raum'&&e.id.startsWith('MG')) ||
+    (sub==='Größen'&&(e.id.startsWith('MM')||e.id.startsWith('MD')))
+  ));
+
+  if(domain==='Logik'){
+    while(pool.length<12)pool.push(genLogicV10());
+  } else if(domain==='Mathematik'){
+    while(pool.length<10)pool.push(genMath());
+  } else if(domain==='Deutsch'){
+    while(pool.length<10)pool.push(genDeutsch());
+  }
+  if(!pool.length)pool=EXERCISES.filter(e=>e.domain===domain);
+  pool=shuffle(pool).slice(0,domain==='Logik'?12:10);
+
+  ensureV10Runner();
+  showScreen('runner');
+  document.getElementById('v10RunnerTitle').textContent=
+    domain==='Mathematik'?'🔢 Mathematik auf Deutsch':
+    domain==='Logik'?'🧠 Logik Lab':'🇩🇪 Deutsch Arena';
+  document.getElementById('v10RunnerSub').textContent=`${sub||'Mix'} · ${pool.length} Aufgaben · ← zurück / weiter →`;
+  startSession(pool,'v10Exercise','training');
+};
+
+// Reliable competence mini-check (used by lesson cards).
+function startMiniCheckV108(eid){
+  const e=EXERCISES.find(x=>x.id===eid);
+  if(!e)return;
+  ensureV10Runner();showScreen('runner');
+  document.getElementById('v10RunnerTitle').textContent='📘 Mini-Check';
+  document.getElementById('v10RunnerSub').textContent='Kurzer Kompetenz-Check';
+  startSession([e],'v10Exercise','training');
+}
+
+// Rewrite legacy inline Mini-Check buttons after lesson rendering.
+const openLessonV108Base=openLesson;
+openLesson=function(id){
+  openLessonV108Base(id);
+  const viewer=document.getElementById('lessonViewer');
+  if(!viewer)return;
+  viewer.querySelectorAll('button').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    const m=oc.match(/EXERCISES\.find\(e=>e\.id==='([^']+)'\)/);
+    if(m && /Mini-Check/.test(b.textContent)){
+      b.setAttribute('onclick',`startMiniCheckV108('${m[1]}')`);
+    }
+  });
+};
+
+// Runtime audit: identify broken onclick handlers globally.
+function fullButtonAuditV108(){
+  const issues=[];
+  document.querySelectorAll('button[onclick]').forEach((b,i)=>{
+    const code=b.getAttribute('onclick')||'';
+    const fn=code.match(/^\s*([A-Za-z_$][\w$]*)\s*\(/);
+    if(fn && typeof window[fn[1]]!=='function'){
+      issues.push({index:i,text:b.textContent.trim(),fn:fn[1]});
+      b.title='Bouton à corriger';
+    }
+  });
+  if(issues.length)console.warn('V10.8 broken handlers',issues);
+  return issues;
+}
+
+// Make errors visible instead of a button silently doing nothing.
+window.addEventListener('error',function(ev){
+  console.error('AGQ runtime error',ev.error||ev.message);
+});
+
+setTimeout(fullButtonAuditV108,350);
 
 updateAll();
 </script>
