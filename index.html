@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V10.9</title>
+<title>Alicia Gymnasium Quest – V10.10</title>
 <link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v109.png?v=109">
 <link rel="icon" type="image/png" href="alicia-gymnasium-icon-v109.png?v=109">
 <link rel="manifest" href="manifest-v109.webmanifest?v=109">
@@ -204,7 +204,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.9 · ICON FORCE</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.10 · HELP SYSTEM</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -4050,6 +4050,108 @@ window.addEventListener('error',function(ev){
 });
 
 setTimeout(fullButtonAuditV108,350);
+
+
+// ===================== V10.10 — UNIVERSAL HELP SYSTEM =====================
+state.joker = state.joker || {count:0,partialCount:0,fullCount:0,xpSpent:0,activeBoxes:{}};
+state.v1010 = state.v1010 || {version:'10.10'};
+
+function infoV1010(e){
+ const c=COMPETENCES.find(x=>x.id===e.skill),q=String(e.question||'').toLowerCase();
+ if(e.skill==='D67'||q.includes('modalverb'))return {
+  title:'Modalverben',
+  hint:'Cherche un verbe qui exprime une possibilité, une obligation, une permission, un conseil ou une volonté.',
+  detail:'Les Modalverben sont können, müssen, dürfen, sollen, wollen et mögen. Exemple : „Ich muss lernen.“ Le modal est „muss“ et le deuxième verbe reste à l’infinitif à la fin.',
+  remember:'kann · muss · darf · soll · will · mag'
+ };
+ if(e.skill==='D75'||q.includes('nebensatz'))return {
+  title:'Nebensatz',
+  hint:'Avec weil, dass ou ob, cherche le verbe conjugué à la fin.',
+  detail:'Dans une subordonnée allemande, le verbe conjugué est généralement à la fin : „Ich bleibe zu Hause, weil ich müde bin.“',
+  remember:'weil / dass / ob → verbe à la fin'
+ };
+ if(e.skill==='D62')return {title:'Präteritum',hint:'Cherche une forme verbale du passé.',detail:'Le Präteritum sert à raconter le passé, surtout à l’écrit : ich spielte, ich ging, ich war.',remember:'spielen → spielte · gehen → ging'};
+ if(e.skill==='D63')return {title:'Perfekt',hint:'Cherche haben/sein + Partizip II.',detail:'Le Perfekt se construit avec haben ou sein + participe passé : „Ich habe gespielt.“ / „Ich bin gegangen.“',remember:'haben/sein + Partizip II'};
+ if(e.skill==='D46')return {title:'Verb',hint:'Cherche le mot qui exprime une action ou un état et qui peut se conjuguer.',detail:'Un verbe se conjugue : laufen → ich laufe, du läufst. Dans „Alicia läuft schnell“, „läuft“ est le verbe.',remember:'Si tu peux le conjuguer, c’est probablement un verbe.'};
+ if(e.skill==='D47')return {title:'Adjektiv',hint:'Cherche le mot qui décrit une personne, un objet ou une manière.',detail:'Un adjectif donne une caractéristique : schnell, groß, schön, müde.',remember:'Adjektiv = caractéristique'};
+ if(e.skill==='D45')return {title:'Nomen',hint:'Cherche un nom de personne, animal, objet, lieu ou idée.',detail:'En allemand, les Nomen prennent une majuscule et ont un article : der Ball, die Schule, das Buch.',remember:'Majuscule + article'};
+ if(e.skill==='D14')return {title:'Schulische Anweisung',hint:'Repère d’abord le verbe de consigne : ankreuzen, ergänzen, begründen, ordnen…',detail:'Le verbe de consigne indique l’action à faire. „Kreuze an“ = coche ; „Begründe“ = justifie ; „Ergänze“ = complète.',remember:'Lis le verbe de consigne en premier.'};
+ if(q.includes('gewitter')||q.includes('donner')||q.includes('blitz'))return {
+  title:'Wie entsteht ein Gewitter?',
+  hint:'Pense à l’air chaud et humide qui monte puis aux charges électriques dans les nuages.',
+  detail:'Un orage se forme lorsque de l’air chaud et humide monte rapidement. En altitude, il refroidit et forme de gros nuages. Les collisions de gouttes et cristaux de glace créent des charges électriques. Leur décharge produit l’éclair. Le tonnerre vient de l’expansion très rapide de l’air chauffé par l’éclair.',
+  remember:'Air chaud monte → nuage → charges → éclair → tonnerre'
+ };
+ if(e.skill==='D06'||q.includes('warum'))return {title:'Ursache und Folge',hint:'Cherche la cause : pourquoi cela arrive-t-il ?',detail:'Pour une question „Warum?“, cherche une relation cause → conséquence. Des mots comme weil, deshalb, dadurch ou denn peuvent aider.',remember:'Cause = raison · Folge = conséquence'};
+ if(e.skill&&e.skill.startsWith('M'))return {title:c?.label||'Mathematik',hint:'Demande-toi : qu’est-ce qui est donné, qu’est-ce qu’on cherche et quelle opération convient ?',detail:`Cette question travaille « ${c?.label||'une compétence mathématique'} ». Lis les données, choisis l’opération, calcule puis vérifie l’unité et la plausibilité du résultat.`,remember:'Gegeben? Gesucht? Rechenart? Antwortsatz?'};
+ if(e.skill&&e.skill.startsWith('L'))return {title:c?.label||'Logik',hint:'Cherche la règle commune et élimine les réponses impossibles.',detail:`Cette question travaille « ${c?.label||'logisches Denken'} ». Cherche une règle stable et teste chaque proposition uniquement à partir des informations données.`,remember:'Regel finden → ausschließen → kontrollieren'};
+ return {title:c?.label||'Explication',hint:`Cette question travaille « ${c?.label||'une compétence'} ». Repère le mot-clé principal.`,detail:`Compétence : ${c?.label||e.title}. Relis la consigne, identifie la règle ou l’information-clé puis compare avec la correction.`,remember:'Comprendre la règle avant de mémoriser la réponse.'};
+}
+
+function exerciseByIdV1010(eid){
+ return (typeof v105GetExercise==='function'&&v105GetExercise(eid)) ||
+        (typeof getExerciseV10==='function'&&getExerciseV10(eid)) ||
+        EXERCISES.find(x=>x.id===eid);
+}
+
+function usePartialJoker(boxId,eid){
+ const e=exerciseByIdV1010(eid);if(!e)return;
+ state.joker.activeBoxes=state.joker.activeBoxes||{};
+ const key=boxId+'-partial';if(state.joker.activeBoxes[key])return;
+ const inf=infoV1010(e),cost=2;
+ state.xp=Math.max(0,state.xp-cost);state.joker.count++;state.joker.partialCount=(state.joker.partialCount||0)+1;state.joker.xpSpent+=cost;state.joker.activeBoxes[key]=true;
+ const p=document.getElementById(boxId+'joker');if(!p)return;
+ p.style.display='block';
+ p.innerHTML=`<div class="joker-help partial"><div class="joker-cost">💡 Petit indice · −2 XP</div><strong>${inf.title}</strong><p>${inf.hint}</p><p class="tiny">L’indice oriente sans donner la réponse.</p></div>`;
+ save();
+}
+
+function useFullJoker(boxId,eid){
+ const e=exerciseByIdV1010(eid);if(!e)return;
+ state.joker.activeBoxes=state.joker.activeBoxes||{};
+ const key=boxId+'-full';if(state.joker.activeBoxes[key])return;
+ const cost=5;
+ state.xp=Math.max(0,state.xp-cost);state.joker.count++;state.joker.fullCount=(state.joker.fullCount||0)+1;state.joker.xpSpent+=cost;state.joker.activeBoxes[key]=true;
+ const p=document.getElementById(boxId+'joker');if(!p)return;
+ const fr=typeof exactFrenchQuestionV10==='function'?exactFrenchQuestionV10(e):frenchGloss(String(e.question||''));
+ p.style.display='block';
+ p.innerHTML=`<div class="joker-help"><div class="joker-cost">🃏 Traduction complète · −5 XP</div><strong>🇫🇷 Traduction française complète</strong><p class="french">${fr}</p><p class="tiny">La bonne réponse n’est pas révélée.</p></div>`;
+ save();
+}
+
+function moreInfoV1010(e){
+ const inf=infoV1010(e);
+ return `<details class="v10-correction" style="margin-top:12px"><summary style="cursor:pointer;font-weight:900">➕ En savoir plus · ${inf.title}</summary><div style="margin-top:10px"><p>${inf.detail}</p><p class="muted"><strong>À retenir :</strong> ${inf.remember}</p></div></details>`;
+}
+
+const answerV1010Base=answer;
+answer=function(boxId,eid,choice,exam=false){
+ answerV1010Base(boxId,eid,choice,exam);
+ const e=exerciseByIdV1010(eid),fb=document.getElementById(boxId+'fb');
+ if(e&&fb&&!fb.querySelector('details'))fb.insertAdjacentHTML('beforeend',moreInfoV1010(e));
+};
+
+const reviewV1010Base=renderExerciseReviewV105;
+renderExerciseReviewV105=function(boxId,e,resp){
+ reviewV1010Base(boxId,e,resp);
+ const box=document.getElementById(boxId);
+ if(box&&!box.querySelector('details'))box.insertAdjacentHTML('beforeend',moreInfoV1010(e));
+};
+
+const renderExerciseV1010Base=renderExercise;
+renderExercise=function(boxId,e,after=null,exam=false){
+ renderExerciseV1010Base(boxId,e,after,exam);
+ const box=document.getElementById(boxId);if(!box)return;
+ let duo=box.querySelector('.joker-duo');
+ if(!duo){
+  duo=document.createElement('div');duo.className='joker-duo';
+  duo.innerHTML=`<button class="btn joker-partial" onclick="usePartialJoker('${boxId}','${e.id}')">💡 Petit indice (−2 XP)</button><button class="btn joker-full" onclick="useFullJoker('${boxId}','${e.id}')">🃏 Traduction complète (−5 XP)</button>`;
+  const fb=document.getElementById(boxId+'fb');if(fb)box.insertBefore(duo,fb);else box.appendChild(duo);
+ }
+ if(!document.getElementById(boxId+'joker')){
+  const j=document.createElement('div');j.id=boxId+'joker';j.style.display='none';duo.insertAdjacentElement('afterend',j);
+ }
+};
 
 updateAll();
 </script>
