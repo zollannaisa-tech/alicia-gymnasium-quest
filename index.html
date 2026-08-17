@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V10.11</title>
+<title>Alicia Gymnasium Quest – V10.12</title>
 <link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v109.png?v=109">
 <link rel="icon" type="image/png" href="alicia-gymnasium-icon-v109.png?v=109">
 <link rel="manifest" href="manifest-v109.webmanifest?v=109">
@@ -204,7 +204,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.11 · DIAGNOSTIC RETURN FIX</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.12 · TEST HELP FIX</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -4219,6 +4219,171 @@ function repairDiagnosticButtonsV1011(){
 }
 setTimeout(repairDiagnosticButtonsV1011,400);
 document.addEventListener('click',()=>setTimeout(repairDiagnosticButtonsV1011,30),true);
+
+
+// ===================== V10.12 — TEST CENTER JOKERS + QUESTION-BASED EXPLANATIONS =====================
+state.v1012 = state.v1012 || {version:'10.12'};
+
+// FIX 1: a joker is now attached to ONE QUESTION, not to the whole exercise box.
+// In previous versions "t0DomainExercise-partial" stayed used after question 1,
+// so the same button appeared dead on following T0 questions.
+function jokerKeyV1012(boxId,eid,type){ return `${boxId}::${eid}::${type}`; }
+
+function exerciseByIdV1012(eid){
+  return (typeof v105GetExercise==='function' && v105GetExercise(eid)) ||
+         (state.session && state.session.dynamic && state.session.dynamic[eid]) ||
+         EXERCISES.find(x=>x.id===eid);
+}
+
+// Detailed pedagogical explanations tied to the actual skill/question.
+function pedagogicalHelpV1012(e){
+  const q=String(e.question||''), ql=q.toLowerCase();
+  const c=COMPETENCES.find(x=>x.id===e.skill);
+
+  const map={
+    D45:['Nomen','Un nom allemand désigne une personne, un animal, un objet, un lieu ou une idée. Il prend toujours une majuscule.','der Hund · die Schule · das Buch','Majuscule + article der/die/das.'],
+    D46:['Verben','Un verbe exprime une action, un état ou un changement et se conjugue.','laufen → ich laufe · sein → ich bin','Teste si tu peux conjuguer le mot.'],
+    D47:['Adjektive','Un adjectif décrit une personne, un objet ou une manière.','schnell · groß · müde · schön','Il répond souvent à la question « Wie ist …? ».'],
+    D48:['Artikel','Les noms allemands s’apprennent avec leur article : der, die ou das.','der Ball · die Schule · das Kind','Apprends toujours le nom avec son article.'],
+    D52:['Singular und Plural','Le singulier désigne une chose, le pluriel plusieurs. La forme du pluriel allemand varie selon le mot.','das Buch → die Bücher · der Ball → die Bälle','Observe aussi l’article : au pluriel, c’est toujours die.'],
+    D53:['Genus','Le genre détermine l’article du nom : masculin der, féminin die, neutre das.','der Hund · die Katze · das Kind','Mémorise article + nom ensemble.'],
+    D54:['Infinitiv / Grundform','L’infinitif est la forme de base du verbe, celle du dictionnaire.','ging → gehen · spielte → spielen','Cherche la forme non conjuguée.'],
+    D55:['Wortstamm','Le Wortstamm est la partie du mot qui reste stable dans une famille de mots.','fahr-en · Fahr-er · Fahr-rad','Repère la partie commune.'],
+    D56:['Wortfamilien','Une Wortfamilie regroupe des mots construits autour du même radical et liés par le sens.','fahren · Fahrer · Fahrt','Même radical + sens apparenté.'],
+    D58:['Komposita','Un Kompositum est un mot composé de deux ou plusieurs mots. Le dernier élément dit ce qu’est la chose.','Tennis + Ball = Tennisball','Le Grundwort est toujours à la fin.'],
+    D59:['Bestimmungswort und Grundwort','Dans un mot composé, le Bestimmungswort précise le sens et le Grundwort indique ce qu’est réellement l’objet.','Vogel + Käfig = Vogelkäfig : Vogel = Bestimmungswort, Käfig = Grundwort.','Le Grundwort détermine aussi le genre : der Käfig → der Vogelkäfig.'],
+    D60:['Adjektivsteigerung','Les adjectifs peuvent être comparés : Positiv, Komparativ, Superlativ.','schnell → schneller → am schnellsten','Cherche la forme qui exprime le degré le plus élevé.'],
+    D61:['Präsens','Le Präsens exprime le présent.','Ich spiele Tennis.','Repère la forme verbale conjuguée au présent.'],
+    D62:['Präteritum','Le Präteritum exprime le passé, surtout dans les récits écrits.','gehen → ging · spielen → spielte','Certaines formes sont irrégulières.'],
+    D63:['Perfekt','Le Perfekt se construit avec haben/sein + Partizip II.','Ich habe gespielt. · Ich bin gegangen.','Cherche deux éléments verbaux.'],
+    D67:['Modalverben','Les Modalverben expriment possibilité, obligation, permission, conseil ou volonté.','können · müssen · dürfen · sollen · wollen · mögen','Formes fréquentes : kann, muss, darf, soll, will, mag.'],
+    D68:['Trennbare Verben','Un verbe séparable se coupe dans une phrase principale : le préfixe part à la fin.','aufstehen → Ich stehe um 7 Uhr auf.','Préfixes fréquents : auf-, an-, ein-, aus-.'],
+    D69:['Reflexive Verben','Un verbe réfléchi s’utilise avec mich, dich, sich, uns, euch.','Ich freue mich. · Sie konzentriert sich.','Cherche le pronom réfléchi.'],
+    D70:['Subjekt','Le sujet indique qui ou quoi fait l’action.','Der kleine Hund jagt den Ball. → Der kleine Hund = Subjekt','Pose la question : Wer oder was?'],
+    D71:['Prädikat','Le Prädikat est le verbe conjugué de la phrase.','Die Kinder lesen ein Buch. → lesen = Prädikat','Cherche l’action conjuguée.'],
+    D75:['Nebensatz','Dans une subordonnée avec weil, dass, ob…, le verbe conjugué va généralement à la fin.','Ich bleibe zu Hause, weil ich müde bin.','weil/dass/ob → verbe à la fin.'],
+    D85:['Doppelkonsonanten','Après une voyelle courte accentuée, on écrit souvent une consonne double lorsqu’une seule consonne sonore suit.','kommen · Mutter · Ball · rennen','Écoute la voyelle : courte → souvent consonne doublée. Ex. kommen, pas komen.'],
+    D86:['ie / i','En allemand, ie note généralement un son [iː] long ; i seul est souvent plus court.','Liebe · spielen · Tier / mit · Kind','Écoute la longueur de la voyelle.'],
+    D87:['s / ss / ß','Après une voyelle courte on trouve souvent ss ; après une voyelle longue ou une diphtongue, souvent ß.','müssen · Kuss / Straße · heißen','Court → ss ; long/diphtongue → souvent ß.'],
+    D89:['Wortstamm-Strategie','Pour vérifier l’orthographe, cherche un mot apparenté où le son est plus clair.','Berg → Berge · Hund → Hunde','Verlängern ou Ableiten aide à entendre la lettre.'],
+    D90:['Satzzeichen','Les signes de ponctuation structurent la phrase : point, point d’interrogation, point d’exclamation, deux-points, guillemets…','Kommst du? · Achtung! · Mia sagt: „Hallo.“','Choisis le signe selon la fonction de la phrase.'],
+    D91:['Komma bei Nebensätzen','Une subordonnée introduite par weil, dass, wenn, obwohl… est séparée de la proposition principale par une virgule.','Ich bleibe zu Hause, weil ich krank bin.','Avant weil/dass/wenn : pense à la virgule.']
+  };
+
+  if(map[e.skill]){
+    const [title,detail,example,remember]=map[e.skill];
+    return {title,detail,example,remember};
+  }
+
+  if(ql.includes('gewitter')||ql.includes('blitz')||ql.includes('donner')){
+    return {title:'Wie entsteht ein Gewitter?',detail:'L’air chaud et humide monte, refroidit et forme de gros nuages. Les collisions entre gouttes et cristaux de glace séparent les charges électriques. Leur décharge produit l’éclair ; l’air brutalement chauffé se dilate et crée le tonnerre.',example:'warme feuchte Luft → Wolke → elektrische Ladungen → Blitz → Donner',remember:'L’éclair est électrique ; le tonnerre est le bruit de l’air qui se dilate.'};
+  }
+  if(e.skill==='D06'||ql.includes('warum')){
+    return {title:'Ursache und Folge',detail:'Une question Warum? demande une cause. Il faut identifier dans le texte l’information qui explique pourquoi le phénomène se produit.',example:'weil · deshalb · dadurch · denn',remember:'Cause = raison ; Folge = conséquence.'};
+  }
+  if(e.skill&&e.skill.startsWith('M')){
+    return {title:c?.label||'Mathematik',detail:`Cette question porte précisément sur « ${c?.label||'cette compétence mathématique'} ». Identifie les données, ce qui est demandé, l’opération nécessaire, puis contrôle l’unité et la plausibilité du résultat.`,example:'Gegeben? → Gesucht? → Rechenart? → Ergebnis?',remember:'Ne calcule pas avant d’avoir compris la question.'};
+  }
+  if(e.skill&&e.skill.startsWith('L')){
+    return {title:c?.label||'Logik',detail:`Cette question travaille « ${c?.label||'le raisonnement logique'} ». Cherche la relation précise entre les éléments de CETTE question, puis élimine les propositions incompatibles.`,example:'Regel finden → jede Antwort testen → ausschließen',remember:'Ne déduis rien qui n’est pas donné.'};
+  }
+
+  // Last fallback uses the actual question + existing lesson content rather than generic filler.
+  const parts=c&&typeof lessonContent==='function'?lessonContent(c):null;
+  return {
+    title:c?.label||e.title,
+    detail:parts?parts[0]:`Cette explication concerne directement la question : « ${q} ».`,
+    example:parts?parts[1]:(e.explanation||'Compare la bonne réponse avec la règle demandée.'),
+    remember:parts?parts[2]:'Relis la question et explique la règle avec tes propres mots.'
+  };
+}
+
+function hintV1012(e){
+  const h=pedagogicalHelpV1012(e),q=String(e.question||'').toLowerCase();
+  if(e.skill==='D85')return 'Écoute la voyelle juste avant la consonne : si elle est courte, cherche souvent une consonne doublée, comme dans kommen ou Mutter.';
+  if(e.skill==='D59')return 'Dans le mot composé, demande-toi : « Qu’est-ce que c’est ? » Le mot qui répond est le Grundwort ; l’autre précise le type.';
+  if(e.skill==='D67')return 'Cherche parmi les propositions un verbe comme können, müssen, dürfen, sollen, wollen ou mögen.';
+  if(e.skill==='D87')return 'Écoute la voyelle : courte → souvent ss ; longue ou diphtongue → souvent ß.';
+  if(q.includes('warum'))return 'Cherche dans le texte la cause exacte du phénomène, pas seulement un mot associé.';
+  if(e.skill&&e.skill.startsWith('M'))return 'Repère d’abord ce qui est donné et ce qui est demandé avant de choisir l’opération.';
+  if(e.skill&&e.skill.startsWith('L'))return 'Teste la même règle sur plusieurs éléments avant de choisir.';
+  return `Cette question porte sur « ${h.title} ». Utilise la règle correspondante sans chercher encore la réponse complète.`;
+}
+
+function fullTranslationV1012(e){
+  // Existing hand-written dictionary first.
+  const q=String(e.question||'').trim();
+  if(typeof FRQ==='object' && FRQ[q]) return FRQ[q];
+  if(typeof exactFrenchQuestionV10==='function'){
+    const r=exactFrenchQuestionV10(e);
+    if(r && r!==q)return r;
+  }
+  return typeof frenchGloss==='function'?frenchGloss(q):q;
+}
+
+usePartialJoker=function(boxId,eid){
+  const e=exerciseByIdV1012(eid);if(!e)return;
+  state.joker.activeBoxes=state.joker.activeBoxes||{};
+  const key=jokerKeyV1012(boxId,eid,'partial');
+  if(state.joker.activeBoxes[key])return;
+  const cost=2;
+  state.xp=Math.max(0,state.xp-cost);
+  state.joker.count=(state.joker.count||0)+1;
+  state.joker.partialCount=(state.joker.partialCount||0)+1;
+  state.joker.xpSpent=(state.joker.xpSpent||0)+cost;
+  state.joker.activeBoxes[key]=true;
+  const p=document.getElementById(boxId+'joker');if(!p)return;
+  p.style.display='block';
+  p.innerHTML=`<div class="joker-help partial"><div class="joker-cost">💡 Petit indice · −2 XP</div><strong>${pedagogicalHelpV1012(e).title}</strong><p>${hintV1012(e)}</p><p class="tiny">La bonne réponse n’est pas donnée.</p></div>`;
+  save();
+};
+
+useFullJoker=function(boxId,eid){
+  const e=exerciseByIdV1012(eid);if(!e)return;
+  state.joker.activeBoxes=state.joker.activeBoxes||{};
+  const key=jokerKeyV1012(boxId,eid,'full');
+  if(state.joker.activeBoxes[key])return;
+  const cost=5;
+  state.xp=Math.max(0,state.xp-cost);
+  state.joker.count=(state.joker.count||0)+1;
+  state.joker.fullCount=(state.joker.fullCount||0)+1;
+  state.joker.xpSpent=(state.joker.xpSpent||0)+cost;
+  state.joker.activeBoxes[key]=true;
+  const p=document.getElementById(boxId+'joker');if(!p)return;
+  p.style.display='block';
+  p.innerHTML=`<div class="joker-help"><div class="joker-cost">🃏 Traduction complète · −5 XP</div><strong>🇫🇷 Traduction exacte de la question</strong><p class="french">${fullTranslationV1012(e)}</p><p class="tiny">La solution n’est pas révélée.</p></div>`;
+  save();
+};
+
+function moreInfoHTMLV1012(e){
+  const h=pedagogicalHelpV1012(e);
+  return `<details class="v10-correction" style="margin-top:12px">
+    <summary style="cursor:pointer;font-weight:900">➕ En savoir plus · ${h.title}</summary>
+    <div style="margin-top:12px">
+      <p><strong>La règle / le phénomène :</strong><br>${h.detail}</p>
+      <div class="v10-answerline"><strong>Exemple lié :</strong><br>${h.example}</div>
+      <p class="muted"><strong>À retenir :</strong> ${h.remember}</p>
+    </div>
+  </details>`;
+}
+
+// Replace the previous generic "En savoir plus" after every answer.
+const answerV1012Base=answer;
+answer=function(boxId,eid,choice,exam=false){
+  answerV1012Base(boxId,eid,choice,exam);
+  const e=exerciseByIdV1012(eid),fb=document.getElementById(boxId+'fb');
+  if(!e||!fb)return;
+  fb.querySelectorAll('details').forEach(d=>d.remove());
+  fb.insertAdjacentHTML('beforeend',moreInfoHTMLV1012(e));
+};
+
+const reviewV1012Base=renderExerciseReviewV105;
+renderExerciseReviewV105=function(boxId,e,resp){
+  reviewV1012Base(boxId,e,resp);
+  const box=document.getElementById(boxId);if(!box)return;
+  box.querySelectorAll('details').forEach(d=>d.remove());
+  box.insertAdjacentHTML('beforeend',moreInfoHTMLV1012(e));
+};
 
 updateAll();
 </script>
