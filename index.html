@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V2 Coach</title>
+<title>Alicia Gymnasium Quest – V10.2 FIX</title>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="app-icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alicia Gymnasium Quest">
 <style>
 :root{--bg:#0d1020;--panel:#191e33;--panel2:#242a46;--text:#f6f7fb;--muted:#aab2ca;--violet:#8b5cf6;--cyan:#22d3ee;--gold:#fbbf24;--green:#34d399;--orange:#fb923c;--red:#fb7185;--line:#303755}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(180deg,#0c0f1d,#14182a 60%,#0d1020);color:var(--text)}
@@ -140,12 +147,58 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 .coach-face{font-size:34px;float:left;margin-right:12px}.coach-msg{font-weight:850;font-size:16px}.coach-sub{font-size:12px;color:var(--muted);margin-top:4px}
 .coach-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.coach-controls button{padding:6px 9px;border-radius:999px;border:1px solid #46517b;background:#242b47;color:white;cursor:pointer}
 
+
+/* ===================== V10 CORRECTION & DIAGNOSTIC ===================== */
+.v10-correction{margin-top:14px;border:1px solid #405078;border-radius:14px;padding:14px;background:#172139}
+.v10-correction.good{border-color:#16856b;background:#15332d}
+.v10-correction.bad{border-color:#b64a67;background:#35202b}
+.v10-answerline{padding:8px 10px;border-radius:10px;background:#222a47;margin:7px 0}
+.v10-right{color:#7ff0c6;font-weight:900}.v10-wrong{color:#ff9eb2;font-weight:900}
+.v10-explain{margin-top:10px;padding:10px 12px;border-left:4px solid var(--cyan);background:#1b2940;border-radius:9px}
+.v10-retry{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.diag-banner{background:linear-gradient(135deg,#33255e,#18264b);border:2px solid #8b5cf6;border-radius:18px;padding:18px;margin:15px 0}
+.diag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:12px}
+.diag-card{background:#1e2743;border:1px solid #414b73;border-radius:14px;padding:13px}
+.diag-card.done{border-color:#16a085;background:#16332f}
+.v10-runner{max-width:980px}
+.extra-click{cursor:pointer;transition:.18s}
+.extra-click:hover{transform:translateY(-2px);border-color:var(--gold)}
+.logic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:14px 0}
+.logic-card{background:#202640;border:1px solid #343d5f;border-radius:15px;padding:15px}
+.feedback-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+.feedback-cell{background:#242b49;border:1px solid #37415f;border-radius:11px;padding:10px;text-align:center}
+.lr-correct{background:#153c36!important;border-radius:8px;padding:6px}.lr-wrong{background:#45202c!important;border-radius:8px;padding:6px}
+.stats-hero{background:radial-gradient(circle at 85% 20%,rgba(251,191,36,.2),transparent 32%),linear-gradient(135deg,#22294a,#171c33)}
+.reward-track{height:14px;background:#2d334f;border-radius:999px;overflow:hidden}.reward-track>div{height:100%;background:linear-gradient(90deg,var(--violet),var(--gold))}
+.medal-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}.medal{min-width:120px;text-align:center;background:#202640;border:1px solid #3b456b;border-radius:15px;padding:12px}
+.medal .ico{font-size:34px}.medal.locked{opacity:.38;filter:grayscale(1)}
+@media(max-width:800px){.feedback-grid{grid-template-columns:1fr 1fr}}
+
+
+/* ===================== V10.2 WORTSCHATZ PATH ===================== */
+.vocab-hero{background:radial-gradient(circle at 88% 10%,rgba(34,211,238,.18),transparent 30%),linear-gradient(135deg,#242553,#151a34);border:1px solid #3a4774;border-radius:20px;padding:20px;margin-bottom:16px}
+.vocab-path-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.vocab-theme{position:relative;background:#202640;border:1px solid #343d5f;border-radius:18px;padding:16px;overflow:hidden}
+.vocab-theme:hover{border-color:#6d5bf3;transform:translateY(-1px)}
+.vocab-theme.locked{opacity:.62}.vocab-theme.done{border-color:#16a085}
+.vocab-theme .theme-icon{font-size:34px}.theme-level{font-size:11px;color:#cbd5e1}.theme-progress{height:9px;background:#2d334f;border-radius:999px;overflow:hidden;margin:9px 0}.theme-progress>div{height:100%;background:linear-gradient(90deg,var(--violet),var(--cyan))}
+.theme-actions{display:flex;gap:8px;flex-wrap:wrap}.theme-actions .btn{padding:8px 10px}
+.vocab-stage{max-width:900px}.learn-card{background:radial-gradient(circle at 75% 18%,rgba(139,92,246,.18),transparent 35%),#202640;border:1px solid #414b73;border-radius:22px;padding:24px;min-height:330px}
+.learn-word{font-size:42px;font-weight:950;margin:16px 0 5px}.learn-fr{font-size:22px;color:#d8d9ff;margin:5px 0 15px}.learn-example{font-size:20px;line-height:1.5;padding:13px;background:#171e35;border-radius:12px}
+.learn-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.learn-controls button{min-width:120px}
+.grammar-box{margin-top:15px;border-left:5px solid var(--gold);background:#292618;border-radius:12px;padding:14px}
+.vocab-test-option{display:block;width:100%;text-align:left;background:#252c48;border:1px solid #3b456b;color:white;border-radius:12px;padding:12px;margin:8px 0;cursor:pointer}
+.vocab-test-option.correct{background:#153c36;border-color:#34d399}.vocab-test-option.wrong{background:#45202c;border-color:#fb7185}
+.mastery-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.mastery-pill{padding:6px 9px;border-radius:999px;background:#27304e;font-size:12px}
+.mastery-pill.ok{background:#155e55}.mastery-pill.gold{background:#704d10}
+.vocab-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 15px}.vocab-tabs button{border:1px solid #3c456b;background:#252b48;color:white;border-radius:999px;padding:8px 11px;cursor:pointer}.vocab-tabs button.active{background:#6d4bc3}
+
 </style>
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V2 · ADAPTIVE COACH</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.2 FIX · ADAPTIVE COACH</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -220,6 +273,15 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <div class="card metric"><div class="muted">XP</div><div class="big" id="statXP">0</div></div>
 <div class="card metric"><div class="muted">T0 Tag</div><div class="big" id="statT0">1/14</div></div>
 <div class="card full"><h2>Letzte Leistungstage</h2><div class="chart" id="historyChart"></div></div>
+<div class="card full stats-hero">
+  <h2>🏆 Fortschritts-Level</h2>
+  <div class="big" id="v10Level">Rookie</div>
+  <div class="muted" id="v10NextReward">Nächste Belohnung</div>
+  <div class="reward-track" style="margin-top:10px"><div id="v10RewardBar"></div></div>
+  <div class="medal-row" id="v10Medals"></div>
+</div>
+<div class="card half"><h2>🎯 Diagnose</h2><div id="v10DiagStats"></div></div>
+<div class="card half"><h2>💪 Stärken & Baustellen</h2><div id="v10Strengths"></div></div>
 </div></section>
 
 <section id="testcenter" class="screen">
@@ -239,26 +301,50 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <div class="card lesson-body" id="lessonViewer" style="display:none;margin-top:16px"></div>
 </section>
 
+
 <section id="vocab" class="screen">
-<h1>📚 Wortschatz Trainer</h1>
-<p class="muted">Spaced Repetition: Wörter kommen genau dann wieder, wenn Alicia sie fast vergessen könnte.</p>
-<div class="grid">
-<div class="card metric"><div class="muted">Heute fällig</div><div class="big" id="dueWords">0</div></div>
-<div class="card metric"><div class="muted">Sicher</div><div class="big" id="knownWords">0</div></div>
-<div class="card metric"><div class="muted">Neu</div><div class="big" id="newWords">0</div></div>
-<div class="card metric"><div class="muted">Serie</div><div class="big" id="vocabStreak">0</div></div>
+<h1>📚 Wortschatz-Pfad</h1>
+<p class="muted">Vocabulaire scolaire structuré selon la matrice Alicia 2026–2027 : apprendre → écouter → répéter → tester → maîtriser.</p>
+<div class="vocab-hero">
+ <span class="badge gold">GRUNDSCHULE 3/4 → GYMNASIUM 5/6</span>
+ <h2 style="margin-top:10px">Deutsch für Schule, Fachsprache und Alltag</h2>
+ <p>Chaque thème correspond directement aux compétences <strong>D109–D123</strong> de la matrice et est relié à un objectif grammatical de la même matrice.</p>
+ <div class="kpi-row">
+  <span class="kpi">🎧 appris : <strong id="vocabLearnedThemes">0</strong></span>
+  <span class="kpi">🧪 tests réussis : <strong id="vocabPassedThemes">0</strong></span>
+  <span class="kpi">⭐ mots sûrs : <strong id="knownWords">0</strong></span>
+  <span class="kpi">🔁 à revoir : <strong id="dueWords">0</strong></span>
+ </div>
+ <div style="display:none"><span id="newWords">0</span><span id="vocabStreak">0</span><div id="flashCard"></div><div id="flashControls"></div></div>
 </div>
-<div id="flashArea">
-<div class="flashcard" id="flashCard"><div class="muted">Bereit?</div><div class="flashword">Wortschatz</div><div class="flashhint">Drücke auf „Session starten“</div></div>
-<button class="btn" onclick="startVocabSession()">Session starten</button>
+
+<div class="vocab-tabs">
+ <button class="active" id="vt-path" onclick="showVocabTabV10('path',this)">🗺️ Themenpfad</button>
+ <button id="vt-review" onclick="showVocabTabV10('review',this)">🔁 Wiederholung</button>
+ <button id="vt-stats" onclick="showVocabTabV10('stats',this)">🏆 Fortschritt</button>
 </div>
-<div id="flashControls" style="display:none">
-<div class="srs-actions">
-<button class="btn danger" onclick="rateWord(0)">😵 Noch nicht</button>
-<button class="btn secondary" onclick="rateWord(1)">😐 Schwer</button>
-<button class="btn" onclick="rateWord(2)">🙂 Gut</button>
-<button class="btn green" onclick="rateWord(3)">🚀 Sehr leicht</button>
+
+<div id="vocabPathPane">
+ <div class="vocab-path-grid" id="vocabThemeGrid"></div>
 </div>
+
+<div id="vocabLearnPane" style="display:none" class="vocab-stage">
+ <button class="btn secondary" onclick="backToVocabPathV10()">← Themen</button>
+ <div class="learn-card" id="vocabLearnCard" style="margin-top:12px"></div>
+</div>
+
+<div id="vocabTestPane" style="display:none" class="vocab-stage">
+ <button class="btn secondary" onclick="backToVocabPathV10()">← Themen</button>
+ <div class="card" id="vocabThemeTest" style="margin-top:12px"></div>
+</div>
+
+<div id="vocabReviewPane" style="display:none" class="vocab-stage">
+ <div class="card"><h2>🔁 Intelligente Wiederholung</h2><p class="muted">Les mots faibles ou arrivés à échéance reviennent en priorité.</p>
+ <div id="v10ReviewArea"></div></div>
+</div>
+
+<div id="vocabStatsPane" style="display:none">
+ <div class="card"><h2>🏆 Wortschatz-Meisterschaft</h2><div id="vocabThemeStats"></div></div>
 </div>
 </section>
 
@@ -412,7 +498,11 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <div class="card" style="margin-top:16px"><h2>Pflichtserie · 60 Minuten</h2><div class="daily-plan" id="structuredDailyPlan"></div></div>
 <div class="hour-bonus" style="margin-top:16px"><h2>⚡ Extra-Stunden-Bonus</h2>
 <p>Nach den ersten 60 Minuten kannst du frei weitermachen. Jede weitere volle Stunde bringt einen zusätzlichen Bonus – egal ob Lese-Marathon, Wortschatz, Boss, Datenbank, Roman oder Projekt.</p>
-<div class="plan-summary"><div class="ps"><strong>+250 XP</strong><div class="muted">1. Extra-Stunde</div></div><div class="ps"><strong>+350 XP</strong><div class="muted">2. Extra-Stunde</div></div><div class="ps"><strong>+500 XP</strong><div class="muted">3. Extra-Stunde</div></div></div>
+<div class="plan-summary">
+<div class="ps extra-click" onclick="startExtraHourV10(1)"><strong>+250 XP</strong><div class="muted">1. Extra-Stunde</div><button class="btn secondary" style="margin-top:8px">Bonus-Training öffnen</button></div>
+<div class="ps extra-click" onclick="startExtraHourV10(2)"><strong>+350 XP</strong><div class="muted">2. Extra-Stunde</div><button class="btn secondary" style="margin-top:8px">Bonus-Training öffnen</button></div>
+<div class="ps extra-click" onclick="startExtraHourV10(3)"><strong>+500 XP</strong><div class="muted">3. Extra-Stunde</div><button class="btn secondary" style="margin-top:8px">Bonus-Training öffnen</button></div>
+</div>
 </div>
 </section>
 
@@ -824,10 +914,11 @@ function rateWord(rating){
  vocabIndex++;save();showVocabCard();
 }
 function updateVocabUI(){
- document.getElementById('dueWords').textContent=dueVocabulary().length;
- document.getElementById('knownWords').textContent=VOCAB.filter(w=>vocabState(w.id).level>=4).length;
- document.getElementById('newWords').textContent=VOCAB.filter(w=>vocabState(w.id).seen===0).length;
- document.getElementById('vocabStreak').textContent=state.vocabStats.streak;
+ const a=document.getElementById('dueWords'),b=document.getElementById('knownWords'),c=document.getElementById('newWords'),d=document.getElementById('vocabStreak');
+ if(a)a.textContent=dueVocabulary().length;
+ if(b)b.textContent=VOCAB.filter(w=>vocabState(w.id).level>=4).length;
+ if(c)c.textContent=VOCAB.filter(w=>vocabState(w.id).seen===0).length;
+ if(d)d.textContent=state.vocabStats.streak;
 }
 
 // Long series
@@ -2238,6 +2329,816 @@ showScreen=function(id,btn){
    }
  }
 }
+
+
+// ===================== V10 DEFINITIVE FIXES =====================
+state.v10diag = state.v10diag || {done:{},scores:{},current:null};
+state.v10 = state.v10 || {version:10,extraHourChoice:null};
+
+function ensureV10Runner(){
+ if(document.getElementById('runner')) return;
+ const main=document.querySelector('main.main');
+ const sec=document.createElement('section');
+ sec.id='runner';sec.className='screen';
+ sec.innerHTML=`<div class="v10-runner"><h1 id="v10RunnerTitle">🎯 Training</h1>
+ <p class="muted" id="v10RunnerSub">Deine Aufgabe wird hier geöffnet.</p>
+ <div class="card exercise" id="v10Exercise" style="display:none;margin-top:16px"></div></div>`;
+ main.appendChild(sec);
+}
+ensureV10Runner();
+
+function getExerciseV10(eid){
+ return EXERCISES.find(x=>x.id===eid) || (state.session&&state.session.dynamic&&state.session.dynamic[eid]) || null;
+}
+function targetDifficultyV10(skill){
+ const sc=scoreOf(skill);
+ if(sc===null)return 1;
+ if(sc<60)return 1;
+ if(sc<82)return 2;
+ return 3;
+}
+
+// --- Stronger session engine: generated items no longer disappear ---
+startSession=function(exercises,boxId,kind='training'){
+ const dyn={};
+ exercises.forEach(e=>{if(!EXERCISES.find(x=>x.id===e.id))dyn[e.id]=e;});
+ state.session={ids:exercises.map(e=>e.id),index:0,correct:0,boxId,kind,dynamic:dyn,startTs:Date.now()};
+ saveSilent();showSessionCurrent();
+}
+showSessionCurrent=function(){
+ if(!state.session)return;
+ const s=state.session;
+ if(s.index>=s.ids.length){finishSession();return;}
+ const e=getExerciseV10(s.ids[s.index]);
+ if(!e){s.index++;showSessionCurrent();return;}
+ renderExercise(s.boxId,e,null,['exam','diagnostic','boss'].includes(s.kind));
+}
+nextInSession=function(){showSessionCurrent();}
+
+// --- Exact French translation of the QUESTION (not a vague reformulation) ---
+const FRQ={
+"Warum steht das Insektenhotel an einem sonnigen, trockenen Platz?":"Pourquoi l’hôtel à insectes est-il placé dans un endroit ensoleillé et sec ?",
+"Welche Überschrift passt am besten?":"Quel titre convient le mieux ?",
+"Warum wachsen Blütenpflanzen neben dem Hotel?":"Pourquoi des plantes à fleurs poussent-elles à côté de l’hôtel ?",
+"Was kann man aus dem Text schließen?":"Que peut-on déduire du texte ?",
+"Wann beginnt der Kinderlauf?":"À quelle heure commence la course des enfants ?",
+"Warum möchte Alicia vor 10 Uhr dort sein?":"Pourquoi Alicia veut-elle être là avant 10 heures ?",
+"Welche Aussage stimmt?":"Quelle affirmation est correcte ?",
+"Was geschieht zuerst?":"Que se passe-t-il en premier ?",
+"Warum entsteht Donner?":"Pourquoi le tonnerre se produit-il ?",
+"Worum geht es im Text hauptsächlich?":"De quoi parle principalement le texte ?",
+"Warum benutzt Lina Papierstreifen?":"Pourquoi Lina utilise-t-elle des bandes de papier ?",
+"Welche Lernstrategie nutzt Lina zusätzlich?":"Quelle stratégie d’apprentissage Lina utilise-t-elle en plus ?",
+"Was bedeutet: „Kreuze die richtige Antwort an.“?":"Que signifie : « Coche la bonne réponse. » ?",
+"Was bedeutet: „Begründe deine Antwort.“?":"Que signifie : « Justifie ta réponse. » ?",
+"Was ist der „Quotient“?":"Qu’est-ce que le « quotient » ?",
+"Was bedeutet „verdoppeln“?":"Que signifie « doubler » ?",
+"Welche Wortart ist „laufen“?":"Quelle est la nature du mot « laufen » ?",
+"Welche Wortart ist „schnell“ in „Alicia läuft schnell“?":"Quelle est la nature du mot « schnell » dans « Alicia läuft schnell » ?",
+"Welcher Artikel passt? ___ Schule":"Quel article convient ? ___ Schule",
+"Was ist der Infinitiv von „ging“?":"Quel est l’infinitif de « ging » ?",
+"Welche Form ist Präteritum?":"Quelle forme est au prétérit ?",
+"Welche Form ist Perfekt?":"Quelle forme est au Perfekt ?",
+"Welche Form ist Präsens?":"Quelle forme est au présent ?",
+"Welche Steigerung ist richtig? schnell – schneller – ...":"Quel superlatif est correct ? schnell – schneller – ...",
+"Welche Satzstellung ist richtig?":"Quel ordre des mots dans la phrase est correct ?",
+"Welcher Satz enthält einen Nebensatz?":"Quelle phrase contient une proposition subordonnée ?",
+"Welches Wort ist das Subjekt? „Der kleine Hund jagt den Ball.“":"Quel mot est le sujet dans : « Der kleine Hund jagt den Ball. » ?",
+"Welches Wort ist das Prädikat? „Die Kinder lesen ein Buch.“":"Quel mot est le prédicat dans : « Die Kinder lesen ein Buch. » ?",
+"Welches Wort gehört zur Wortfamilie von „fahren“?":"Quel mot appartient à la famille de mots de « fahren » ?",
+"Welches Kompositum passt: ein Ball für Tennis ist ein ...":"Quel mot composé convient : une balle pour le tennis est une ...",
+"Welches Bestimmungswort steckt in „Vogelkäfig“?":"Quel est le premier élément déterminant dans le mot composé « Vogelkäfig » ?",
+"Welcher Satz steht im Futur?":"Quelle phrase est au futur ?",
+"Welches Modalverb passt? „Ich ___ heute trainieren.“":"Quel verbe modal convient ? « Ich ___ heute trainieren. »",
+"Welches Verb ist trennbar?":"Quel verbe est à particule séparable ?",
+"Welcher Satz enthält ein reflexives Verb?":"Quelle phrase contient un verbe pronominal/réfléchi ?",
+"Welches Pronomen ersetzt „Alicia“?":"Quel pronom remplace « Alicia » ?",
+"Welches Wort ist richtig geschrieben?":"Quel mot est correctement orthographié ?",
+"Welches Wort braucht einen Doppelkonsonanten?":"Quel mot nécessite une consonne double ?",
+"Welche Schreibweise ist richtig?":"Quelle orthographe est correcte ?",
+"Welcher Satz ist richtig?":"Quelle phrase est correcte ?",
+"Welches Nomen muss großgeschrieben werden?":"Quel nom doit prendre une majuscule ?",
+"Welche Form hilft bei der Schreibweise von „Berg“?":"Quelle forme aide à vérifier l’orthographe de « Berg » ?",
+"Welches Wort ist falsch geschrieben?":"Quel mot est mal orthographié ?",
+"Welche Korrektur ist richtig? „Wir wißen die Antwort.“":"Quelle correction est juste pour « Wir wißen die Antwort. » ?",
+"Wo gehört das Komma hin?":"Où faut-il placer la virgule ?",
+"Welche Satzzeichen passen? Mia sagt ___ Ich komme später ___":"Quels signes de ponctuation conviennent ? Mia sagt ___ Ich komme später ___",
+"Welche Zahl ist größer?":"Quel nombre est le plus grand ?",
+"Welche Zahl liegt zwischen 6 490 und 6 510?":"Quel nombre se situe entre 6 490 et 6 510 ?",
+"Runde 4 749 auf den nächsten Hunderter.":"Arrondis 4 749 à la centaine la plus proche.",
+"Welche Zerlegung ist richtig für 53 407?":"Quelle décomposition est correcte pour 53 407 ?",
+"Was ist der Nachbarhunderter unter 8 362?":"Quelle est la centaine immédiatement inférieure à 8 362 ?",
+"Welche Rechnung ist ungefähr 600?":"Quel calcul donne environ 600 ?",
+"Ein Bus hat 52 Plätze. 37 Plätze sind besetzt. Wie viele Plätze sind frei?":"Un bus a 52 places. 37 places sont occupées. Combien de places sont libres ?",
+"Alicia trainiert am Montag 90 Minuten und am Donnerstag 75 Minuten. Wie viele Minuten trainiert sie insgesamt?":"Alicia s’entraîne 90 minutes lundi et 75 minutes jeudi. Combien de minutes s’entraîne-t-elle au total ?",
+"Ein Karton enthält 8 Dosen mit je 6 Tennisbällen. 5 Bälle werden benutzt. Wie viele Bälle bleiben übrig?":"Un carton contient 8 boîtes de 6 balles de tennis chacune. 5 balles sont utilisées. Combien de balles restent-elles ?",
+"Für ein Turnier werden 96 Flaschen gleichmäßig auf 8 Kisten verteilt. Welche Rechnung passt?":"Pour un tournoi, 96 bouteilles sont réparties équitablement dans 8 caisses. Quel calcul convient ?",
+"Ein Zug fährt 248 km. Nach 173 km macht er Halt. Wie viele Kilometer fehlen noch?":"Un train doit parcourir 248 km. Il s’arrête après 173 km. Combien de kilomètres reste-t-il à parcourir ?",
+"Eine Familie kauft 4 Eintrittskarten zu je 7 € und bezahlt mit 50 €. Wie viel Geld bekommt sie zurück?":"Une famille achète 4 billets à 7 € chacun et paie avec 50 €. Combien d’argent reçoit-elle en monnaie ?",
+"Welche Angabe ist für die Frage unnötig? „Ein Training beginnt um 16 Uhr, dauert 90 Minuten und Alicia trägt ein violettes T-Shirt. Wann endet es?“":"Quelle information est inutile pour répondre à la question : « Un entraînement commence à 16 h, dure 90 minutes et Alicia porte un tee-shirt violet. À quelle heure se termine-t-il ? »",
+"Welche Antwort ist vollständig?":"Quelle réponse est complète ?",
+"Das Training beginnt um 16:35 Uhr und dauert 1 Stunde 20 Minuten. Wann endet es?":"L’entraînement commence à 16 h 35 et dure 1 h 20. À quelle heure se termine-t-il ?",
+"Welche Einheit passt zur Höhe einer Tür am besten?":"Quelle unité convient le mieux pour mesurer la hauteur d’une porte ?",
+"2 m 35 cm sind ...":"2 m 35 cm correspondent à ...",
+"Welche Masse ist für einen Schulranzen plausibel?":"Quelle masse est plausible pour un cartable ?",
+"Von 14:20 Uhr bis 15:05 Uhr vergehen ...":"De 14 h 20 à 15 h 05, il s’écoule ...",
+"Wie viele Spiegelachsen hat ein Quadrat?":"Combien d’axes de symétrie possède un carré ?",
+"Welche Aussage stimmt für ein Rechteck immer?":"Quelle affirmation est toujours vraie pour un rectangle ?",
+"Welcher Körper hat 6 quadratische Flächen?":"Quel solide possède 6 faces carrées ?",
+"Was bedeutet „senkrecht“?":"Que signifie « perpendiculaire » ?",
+"In einer Tabelle stehen: Mo 3 Bücher, Di 5, Mi 2. An welchem Tag wurden die meisten Bücher ausgeliehen?":"Dans un tableau : lundi 3 livres, mardi 5, mercredi 2. Quel jour a-t-on emprunté le plus de livres ?",
+"In einem Beutel sind nur rote Kugeln. Eine rote Kugel zu ziehen ist ...":"Un sac ne contient que des boules rouges. Tirer une boule rouge est ...",
+"Ein Würfel wird einmal geworfen. Eine 7 zu würfeln ist ...":"On lance une fois un dé classique. Obtenir 7 est ...",
+"Eine Münze wird geworfen. Kopf oder Zahl sind bei einer fairen Münze ...":"On lance une pièce équilibrée. Pile et face sont ...",
+"Welche Zahl ist eine Primzahl?":"Quel nombre est un nombre premier ?",
+"Welche Zahl ist durch 3 teilbar?":"Quel nombre est divisible par 3 ?",
+"Welche Zahl liegt unter 0?":"Quel nombre est inférieur à 0 ?",
+"Welche Zahl folgt? 2, 4, 8, 16, ...":"Quel nombre vient ensuite ? 2, 4, 8, 16, ...",
+"Welche Zahl folgt? 100, 90, 75, 55, ...":"Quel nombre vient ensuite ? 100, 90, 75, 55, ...",
+"Was passt nicht? Dreieck – Quadrat – Kreis – Würfel":"Quel élément n’appartient pas à la même catégorie ? Triangle – carré – cercle – cube",
+"Hand verhält sich zu Handschuh wie Fuß zu ...":"Main est à gant ce que pied est à ...",
+"Alle Flims sind blau. Dieses Ding ist ein Flim. Welche Aussage muss stimmen?":"Tous les Flims sont bleus. Cet objet est un Flim. Quelle affirmation doit forcément être vraie ?",
+"Wenn A vor B steht und B vor C steht, wer steht ganz hinten?":"Si A est devant B et B devant C, qui est tout derrière ?",
+"Welche Zahl fehlt? 3, 6, 9, __, 15":"Quel nombre manque ? 3, 6, 9, __, 15",
+"Welche Zahl folgt? 1, 4, 9, 16, ...":"Quel nombre vient ensuite ? 1, 4, 9, 16, ...",
+"Was gehört zur gleichen Gruppe? Rose – Tulpe – Sonnenblume – ?":"Qu’est-ce qui appartient au même groupe ? Rose – tulipe – tournesol – ?",
+"Wenn heute Mittwoch ist, welcher Tag ist in 9 Tagen?":"Si nous sommes mercredi aujourd’hui, quel jour serons-nous dans 9 jours ?",
+"Vier Kinder haben je eine andere Lieblingsfarbe. Wie viele verschiedene Farben braucht man mindestens?":"Quatre enfants ont chacun une couleur préférée différente. Combien faut-il au minimum de couleurs différentes ?",
+"Welche Aussage ist logisch möglich? Ein Gegenstand ist gleichzeitig ...":"Quelle affirmation est logiquement possible ? Un objet est en même temps ...",
+"Welche Zahl passt nicht? 12, 18, 24, 31, 36":"Quel nombre ne convient pas ? 12, 18, 24, 31, 36",
+"Anna ist älter als Ben. Ben ist älter als Carla. Wer ist am jüngsten?":"Anna est plus âgée que Ben. Ben est plus âgé que Carla. Qui est la plus jeune ?",
+"Buch : lesen = Musik : ...":"Livre : lire = musique : ...",
+"Welche Zahl folgt? 50, 45, 35, 20, ...":"Quel nombre vient ensuite ? 50, 45, 35, 20, ...",
+"Wenn kein rotes Dreieck groß ist und Figur X ein großes rotes Dreieck ist, dann ...":"Si aucun triangle rouge n’est grand et que la figure X est un grand triangle rouge, alors ...",
+"Welche Reihenfolge ist möglich? Lea vor Mia, Mia vor Zoe.":"Quel ordre est possible ? Lea devant Mia, Mia devant Zoe."
+};
+function exactFrenchQuestionV10(e){
+ const q=String(e.question||'').split(/\n\s*\n/).pop().trim();
+ if(FRQ[q])return FRQ[q];
+ // exact handling for generated arithmetic / repeated generators
+ let m;
+ if((m=q.match(/^(\d[\d ]*) \+ (\d[\d ]*) = \?$/)))return `${m[1]} + ${m[2]} = ?`;
+ if((m=q.match(/^(\d[\d ]*) − (\d[\d ]*) = \?$/)))return `${m[1]} − ${m[2]} = ?`;
+ if((m=q.match(/^(\d+) · (\d+) = \?$/)))return `${m[1]} × ${m[2]} = ?`;
+ if((m=q.match(/^(\d+) : (\d+) = \?$/)))return `${m[1]} ÷ ${m[2]} = ?`;
+ if(q.startsWith('Welche Zahl folgt?'))return q.replace('Welche Zahl folgt?','Quel nombre vient ensuite ?');
+ if(q.startsWith('Welche Aussage passt am besten zur Kompetenz'))return q.replace('Welche Aussage passt am besten zur Kompetenz','Quelle affirmation correspond le mieux à la compétence');
+ const simple={
+  'Welche Satzstellung ist richtig?':'Quel ordre des mots est correct ?',
+  'Welche Form ist Präteritum?':'Quelle forme est au prétérit ?',
+  'Welche Form ist Perfekt?':'Quelle forme est au Perfekt ?',
+  'Welches Wort ist richtig geschrieben?':'Quel mot est correctement orthographié ?',
+  'Welches Wort ist ein Verb?':'Quel mot est un verbe ?',
+  'Welches Wort ist ein Adjektiv?':'Quel mot est un adjectif ?',
+  'Was bedeutet „begründen“?':'Que signifie « begründen » (justifier) ?'
+ };
+ return simple[q] || frenchGloss(q);
+}
+function partialHintV10(e){
+ const q=String(e.question||'').toLowerCase();
+ if(q.includes('warum'))return 'Cherche une cause : repère dans le texte des mots comme « weil », « dadurch », « deshalb » ou une relation cause → conséquence.';
+ if(q.includes('wann')||q.includes('uhr'))return 'Repère les indications de temps et vérifie bien l’unité.';
+ if(q.includes('überschrift'))return 'Cherche l’idée générale du texte, pas un détail.';
+ if(q.includes('schließen'))return 'La réponse n’est pas écrite mot pour mot : combine deux informations du texte.';
+ if(e.skill&&e.skill[0]==='M')return 'Note « Gegeben? Gesucht? Rechenart? » avant de calculer.';
+ if(e.skill&&e.skill[0]==='L')return 'Cherche la règle et élimine d’abord les réponses impossibles.';
+ return 'Repère le verbe de consigne et 1–2 mots-clés, sans traduire toute la phrase.';
+}
+usePartialJoker=function(boxId,eid){
+ const e=getExerciseV10(eid);if(!e)return;
+ const key=boxId+'-partial';if(state.joker.activeBoxes[key])return;
+ const cost=2;state.xp=Math.max(0,state.xp-cost);state.joker.count++;state.joker.partialCount=(state.joker.partialCount||0)+1;state.joker.xpSpent+=cost;state.joker.activeBoxes[key]=true;state.joker.activeBoxes[boxId]=true;
+ const p=document.getElementById(boxId+'joker');p.style.display='block';
+ p.innerHTML=`<div class="joker-help partial"><div class="joker-cost">💡 Petit indice · −2 XP</div><strong>Indice seulement</strong><p>${partialHintV10(e)}</p></div>`;
+ save();if(typeof coachShow==='function')coachShow('joker',['💡','Kleiner Hinweis.','Nur ein Tipp – den Rest schaffst du allein.']);
+}
+useFullJoker=function(boxId,eid){
+ const e=getExerciseV10(eid);if(!e)return;
+ const key=boxId+'-full';if(state.joker.activeBoxes[key])return;
+ const cost=5;state.xp=Math.max(0,state.xp-cost);state.joker.count++;state.joker.fullCount=(state.joker.fullCount||0)+1;state.joker.xpSpent+=cost;state.joker.activeBoxes[key]=true;state.joker.activeBoxes[boxId]=true;
+ const p=document.getElementById(boxId+'joker');p.style.display='block';
+ p.innerHTML=`<div class="joker-help"><div class="joker-cost">🃏 Traduction complète · −5 XP</div><strong>🇫🇷 Traduction exacte de la question</strong><p class="french">${exactFrenchQuestionV10(e)}</p><p class="tiny">La réponse n’est pas donnée : relis ensuite la question allemande.</p></div>`;
+ save();if(typeof coachShow==='function')coachShow('joker',['🃏','Übersetzung geöffnet.','Lies danach die deutsche Frage noch einmal.']);
+}
+
+// --- Clear explanations and the correct answer after EVERY multiple-choice answer ---
+function explainExerciseV10(e){
+ const c=COMPETENCES.find(x=>x.id===e.skill);
+ const title=c?c.label:e.title;
+ if(e.skill==='D14')return 'Il s’agit du vocabulaire des consignes scolaires. Il faut comprendre le verbe de consigne avant de commencer.';
+ if(e.skill==='D06')return 'Cherche la relation cause → conséquence dans le texte.';
+ if(e.skill==='D03')return 'La bonne réponse se trouve explicitement dans le texte : repère la phrase qui donne l’information.';
+ if(e.skill==='D08')return 'Le bon titre résume l’idée principale du texte et non un détail isolé.';
+ if(e.skill==='D10')return 'Il faut déduire l’information à partir de plusieurs indices du texte.';
+ if(e.skill==='M20')return 'Identifie l’action mathématique demandée avant de choisir l’opération.';
+ if(e.skill==='M22')return 'La situation demande plusieurs étapes : calcule dans l’ordre et contrôle le résultat final.';
+ if(e.skill==='L01')return 'Compare chaque passage d’un nombre au suivant pour identifier la règle.';
+ if(e.skill==='L09')return 'Utilise uniquement les informations données et enchaîne les relations logiques.';
+ return `Compétence travaillée : ${title}. Compare ta réponse à la solution et explique-toi la règle avant de continuer.`;
+}
+answer=function(boxId,eid,choice,exam=false){
+ const e=getExerciseV10(eid);if(!e)return;
+ if(e.generated)e.answer=resolveGeneratedAnswer(e);
+ const ok=choice===e.answer;
+ const chosen=e.options[choice],right=e.options[e.answer];
+ document.querySelectorAll(`#${boxId} .answer`).forEach((b,i)=>{
+   b.disabled=true;if(i===e.answer)b.classList.add('correct');else if(i===choice)b.classList.add('wrong');
+ });
+ record(e.skill,ok);
+ if(!state.completedExercises.includes(e.id))state.completedExercises.push(e.id);
+ if(state.session){state.session.index++;state.session.correct+=(ok?1:0);}
+ const kind=state.session?.kind||'training';
+ document.getElementById(boxId+'fb').innerHTML=`<div class="v10-correction ${ok?'good':'bad'}">
+ <div style="font-size:20px;font-weight:950">${ok?'✅ Richtig / Correct':'❌ Nicht richtig / À corriger'}</div>
+ <div class="v10-answerline"><span class="${ok?'v10-right':'v10-wrong'}">Ta réponse :</span> ${chosen}</div>
+ <div class="v10-answerline"><span class="v10-right">Bonne réponse :</span> ${right}</div>
+ <div class="v10-explain"><strong>Pourquoi ?</strong><br>${explainExerciseV10(e)}</div>
+ <div class="v10-retry">${!['diagnostic','boss','exam'].includes(kind)&&!ok?`<button class="btn secondary" onclick="startSkillRetryV10('${e.skill}')">🔁 Exercice similaire</button>`:''}
+ <button class="btn" onclick="nextInSession('${boxId}')">Nächste Aufgabe</button></div></div>`;
+ if(typeof coachShow==='function'){
+  state.coach.correctStreak=ok?(state.coach.correctStreak||0)+1:0;
+  coachShow(ok?'correct':'wrong');
+ }
+ save();
+}
+function startSkillRetryV10(skill){
+ const pack=guaranteedExercisesForCompetence(skill,3);
+ startSession(pack,'v10Exercise','training');
+ document.getElementById('v10RunnerTitle').textContent='🔁 Correctionstraining';
+ document.getElementById('v10RunnerSub').textContent='3 exercices similaires pour consolider la règle.';
+ showScreen('runner');
+}
+
+// --- Logic database: text + number + deduction generators ---
+function genLogicV10(skill=null){
+ const choose=skill||['L01','L03','L04','L05','L09','L10','L12','L13','L14'][Math.floor(Math.random()*9)];
+ const id='GL10-'+Date.now()+'-'+Math.floor(Math.random()*99999);
+ let e={id,domain:'Logik',title:'Logik Datenbank',skill:choose,difficulty:targetDifficultyV10(choose),generated:true};
+ if(choose==='L01'){const a=rand(2,9),d=rand(2,8),seq=[a,a+d,a+2*d,a+3*d],ans=a+4*d;e.question=`Welche Zahl folgt? ${seq.join(', ')}, ...`;e.options=shuffle([ans,ans+d,ans-d,ans+1]);e.correctValue=ans;}
+ else if(choose==='L03'){const sets=[['Auge','Brille','Fuß','Schuh'],['Hand','Handschuh','Kopf','Mütze'],['Buch','lesen','Musik','hören']];const s=sets[rand(0,sets.length-1)];e.question=`${s[0]} : ${s[1]} = ${s[2]} : ...`;e.options=shuffle([s[3],'rechnen','springen','Tisch']);e.correctValue=s[3];}
+ else if(choose==='L04'){const sets=[['Rose','Tulpe','Lilie','Blume'],['Hund','Katze','Pferd','Tier'],['Rot','Blau','Grün','Farbe']];const s=sets[rand(0,sets.length-1)];e.question=`Was gehört zur gleichen Gruppe? ${s[0]} – ${s[1]} – ${s[2]} – ?`;e.options=shuffle([s[3],'Tisch','Regen','Zahl']);e.correctValue=s[3];}
+ else if(choose==='L05'){const base=[12,18,24,30],odd=31;e.question=`Welche Zahl passt nicht? ${shuffle([...base,odd]).join(', ')}`;e.options=shuffle([12,18,31,30]);e.correctValue=31;}
+ else if(choose==='L09'){e.question='Mia ist größer als Lea. Lea ist größer als Zoe. Wer ist am kleinsten?';e.options=shuffle(['Mia','Lea','Zoe','nicht bestimmbar']);e.correctValue='Zoe';}
+ else if(choose==='L10'){e.question='Alle Zorps sind grün. Dieses Ding ist ein Zorp. Was muss stimmen?';e.options=shuffle(['Es ist grün.','Es ist groß.','Es ist rund.','Es ist schwer.']);e.correctValue='Es ist grün.';}
+ else if(choose==='L12'){const a=rand(2,10),d=rand(2,6);e.question=`Welche Zahl fehlt? ${a}, ${a+d}, __, ${a+3*d}, ${a+4*d}`;const ans=a+2*d;e.options=shuffle([ans,ans+1,ans-d,ans+d]);e.correctValue=ans;}
+ else if(choose==='L13'){const n=rand(3,6);e.question=`${n} Kinder haben jeweils eine andere Lieblingsfarbe. Wie viele verschiedene Farben braucht man mindestens?`;e.options=shuffle([n,n-1,n+1,2]);e.correctValue=n;}
+ else {e.question='Lea steht vor Mia. Mia steht vor Zoe. Welche Reihenfolge ist möglich?';e.options=shuffle(['Lea – Mia – Zoe','Zoe – Mia – Lea','Mia – Lea – Zoe','Zoe – Lea – Mia']);e.correctValue='Lea – Mia – Zoe';}
+ e.answer=resolveGeneratedAnswer(e);return e;
+}
+function logicPackV10(n=12,skill=null){return Array.from({length:n},()=>genLogicV10(skill));}
+function startLogicPackV10(skill=null,n=12){
+ const pack=logicPackV10(n,skill);startSession(pack,'v10Exercise','training');
+ document.getElementById('v10RunnerTitle').textContent='🧠 Logik Datenbank';
+ document.getElementById('v10RunnerSub').textContent=`${n} exercices adaptatifs · ${skill||'mix logique'}`;
+ showScreen('runner');
+}
+function renderLogicHubV10(){
+ const sec=document.getElementById('logik');if(!sec||sec.dataset.v10)return;sec.dataset.v10='1';
+ sec.innerHTML=`<h1>🧠 Logik Lab · V10</h1><p class="muted">Datenbank adaptative: Zahlenfolgen · Analogien · Klassifikation · Ausschluss · Deduktion · Bedingungen · fehlende Informationen.</p>
+ <div class="logic-grid">
+ <div class="logic-card"><h3>🔢 Zahlenfolgen</h3><p class="muted">Muster erkennen</p><button class="btn" onclick="startLogicPackV10('L01',12)">12 Aufgaben</button></div>
+ <div class="logic-card"><h3>🔗 Analogien</h3><p class="muted">Beziehungen übertragen</p><button class="btn" onclick="startLogicPackV10('L03',12)">12 Aufgaben</button></div>
+ <div class="logic-card"><h3>🧩 Klassifikation</h3><p class="muted">Gruppen & Ausreißer</p><button class="btn" onclick="startLogicPackV10('L04',12)">12 Aufgaben</button></div>
+ <div class="logic-card"><h3>🧠 Deduktion</h3><p class="muted">Sicher folgern</p><button class="btn" onclick="startLogicPackV10('L09',12)">12 Aufgaben</button></div>
+ <div class="logic-card"><h3>🚦 Bedingungen</h3><p class="muted">Wenn… dann…</p><button class="btn" onclick="startLogicPackV10('L10',12)">12 Aufgaben</button></div>
+ <div class="logic-card"><h3>🏁 Mix Sprint</h3><p class="muted">30 gemischte Aufgaben</p><button class="btn gold" onclick="startLogicPackV10(null,30)">30 Aufgaben</button></div>
+ </div>`;
+}
+renderLogicHubV10();
+
+// --- Series Training fixed: dynamic exercises are stored in the session ---
+startLongSeries=function(n){
+ let pool=[];
+ for(let i=0;i<n;i++){
+  const r=Math.random();
+  pool.push(r<.34?genDeutsch():r<.67?genMath():genLogicV10());
+ }
+ renderSeriesDots(n,0);startSession(pool,'seriesExercise','series');showScreen('longseries');
+}
+startWeakSeries=function(n){
+ const weak=weakSkills(c=>c.priority==='P0',20);let pool=[];
+ for(let i=0;i<n;i++){const c=weak[i%weak.length];pool.push(c.id[0]==='L'?genLogicV10(c.id):competenceMicroExercise(c));}
+ renderSeriesDots(n,0);startSession(pool,'seriesExercise','series');showScreen('longseries');
+}
+
+// --- Daily plan opens a visible runner; during initial diagnosis it becomes diagnostic first ---
+function diagCompleteV10(){return ['T0DE','T0MA','T0LO','T0MX'].every(id=>state.v10diag.done[id]);}
+function diagLabelV10(id){return {T0DE:'Deutsch Diagnose',T0MA:'Mathematik Diagnose',T0LO:'Logik Diagnose',T0MX:'Gesamtprofil'}[id]||id;}
+const dailyTemplateV10base=dailyTemplate;
+dailyTemplate=function(){
+ if(!diagCompleteV10()){
+   const todo=['T0DE','T0MA','T0LO','T0MX'].filter(id=>!state.v10diag.done[id]);
+   const mins={T0DE:30,T0MA:30,T0LO:25,T0MX:30};let chosen=todo.slice(0,2);
+   let plan=chosen.map((id,i)=>({id:'diag'+id,min:mins[id],icon:'🧪',name:diagLabelV10(id),action:'diag:'+id,skill:null}));
+   let total=plan.reduce((a,b)=>a+b.min,0);
+   if(total<60)plan.push({id:'diagvocab',min:60-total,icon:'📚',name:'Wortschatz locker',action:'vocab',skill:null});
+   return plan;
+ }
+ return dailyTemplateV10base();
+}
+startDailyStep=function(id,action,skill,min){
+ state.currentDailyStep={id,action,skill,min,date:today()};
+ if(action.startsWith('diag:')){startT0DomainV10(action.split(':')[1]);return;}
+ if(skill){
+   const pack=guaranteedExercisesForCompetence(skill,6).map(e=>{e.difficulty=targetDifficultyV10(skill);return e;});
+   startSession(pack,'v10Exercise','training');
+   document.getElementById('v10RunnerTitle').textContent='🎯 '+(COMPETENCES.find(c=>c.id===skill)?.label||'Tagestraining');
+   document.getElementById('v10RunnerSub').textContent=`Tagesplan · ${min} Minuten · niveau adapté aux résultats`;
+   showScreen('runner');
+ } else showScreen(action);
+}
+function startExtraHourV10(h){
+ state.v10.extraHourChoice=h;saveSilent();showScreen('bonusplay');
+ if(typeof coachShow==='function')coachShow('improve',['⚡',`${h}. Extra-Stunde gewählt!`,'Wähle jetzt eine Bonus-Aktivität. Die Zeit wird automatisch gesammelt.']);
+}
+
+// --- Diagnostic center with saved results and automatic adaptation ---
+function renderT0Tests(){
+ const list=[
+  {id:'T0DE',name:'Deutsch Lesen & Sprache',domain:'D',n:25,target:80},
+  {id:'T0MA',name:'Mathematik Grundschule',domain:'M',n:25,target:85},
+  {id:'T0LO',name:'Logisches Denken',domain:'L',n:20,target:80},
+  {id:'T0MX',name:'Gesamtprofil',domain:'ALL',n:30,target:82}
+ ];
+ const done=list.filter(t=>state.v10diag.done[t.id]).length;
+ document.getElementById('t0Domains').innerHTML=`<div class="diag-banner"><h2>🧭 Diagnostic de départ : ${done}/4</h2>
+ <p>${done<4?'Commence ici avant le programme quotidien normal. Les résultats alimentent directement la matrice et le coach adaptatif.':'✅ Diagnostic terminé : le Tagesplan utilise désormais automatiquement ses forces et faiblesses.'}</p></div>`+
+ list.map(t=>`<div class="test-domain ${state.v10diag.done[t.id]?'done':''}"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+ <div><strong>${state.v10diag.done[t.id]?'✅ ':''}${t.name}</strong><div class="muted">${t.n} questions · ${state.v10diag.done[t.id]?'Score : '+state.v10diag.scores[t.id]+'%':'diagnostic initial'}</div></div>
+ <button class="btn ${state.v10diag.done[t.id]?'secondary':''}" onclick="startT0DomainV10('${t.id}')">${state.v10diag.done[t.id]?'Refaire':'Start'}</button></div></div>`).join('')+
+ `<div class="notice" style="margin-top:14px"><strong>Après le diagnostic :</strong> aucune nouvelle version n’est nécessaire pour adapter le niveau. La matrice se met à jour après chaque réponse et les Daily Quests choisissent automatiquement les compétences les plus faibles/non testées.</div>`;
+}
+function startT0DomainV10(id){
+ const t={T0DE:{domain:'D',n:25},T0MA:{domain:'M',n:25},T0LO:{domain:'L',n:20},T0MX:{domain:'ALL',n:30}}[id];
+ let pool=[];
+ if(t.domain==='L')pool=logicPackV10(t.n);
+ else if(t.domain==='ALL'){for(let i=0;i<t.n;i++)pool.push(i%3===0?genDeutsch():i%3===1?genMath():genLogicV10());}
+ else pool=expandedPool(t.domain,t.n);
+ state.v10diag.current=id;
+ startSession(pool,'t0DomainExercise','diagnostic');showScreen('t0tests');
+}
+
+// --- Final session handling including diagnostic, series and daily step ---
+finishSession=function(){
+ if(!state.session)return;
+ if(state.session.kind==='boss'){finishBoss(false);return;}
+ const s=state.session,pct=s.ids.length?Math.round(100*s.correct/s.ids.length):0;
+ if(s.kind==='series'){state.longSeriesBest[s.ids.length]=Math.max(state.longSeriesBest[s.ids.length]||0,pct);renderSeriesDots(s.ids.length,s.ids.length);}
+ if(s.kind==='diagnostic' && state.v10diag.current){
+   const id=state.v10diag.current;state.v10diag.done[id]=true;state.v10diag.scores[id]=pct;state.v10diag.current=null;
+ }
+ const box=document.getElementById(s.boxId);box.style.display='block';
+ box.innerHTML=`<h2>🏁 ${s.kind==='diagnostic'?'Diagnostic terminé':'Challenge beendet'}</h2><div class="big">${pct}%</div>
+ <p>${s.correct}/${s.ids.length} richtig</p><p class="muted">${s.kind==='diagnostic'?'La matrice vient d’être actualisée : les prochaines missions s’adaptent automatiquement.':'Der Coach hat die Matrix aktualisiert.'}</p>
+ ${s.kind==='diagnostic'?'<button class="btn" onclick="showScreen(\'t0tests\')">Diagnostic Center</button>':''}`;
+ state.session=null;
+ if(state.currentDailyStep)completeCurrentDailyStep();
+ checkTrophies();save();
+}
+
+// --- Freie Antworten: detailed pedagogical correction, model answer and retry ---
+function germanOpenAnalysisV10(t,raw){
+ const txt=raw.trim(),low=txt.toLowerCase(),wc=countWords(txt);
+ const hits=t.keywords.filter(k=>low.includes(k.toLowerCase()));
+ const content=Math.round(40*hits.length/Math.max(1,t.keywords.length));
+ const grammar=Math.min(15,(txt.match(/\b(weil|dass|ist|sind|hat|haben|wird|werden|kann|können|muss|müssen|teilt|teile|bleiben|gefahren)\b/gi)||[]).length*3+6);
+ const sentence=(/^[A-ZÄÖÜ]/.test(txt)&&/[.!?]$/.test(txt))?15:8;
+ const vocab=Math.min(15,5+hits.length*3);
+ const length=Math.min(15,Math.round(15*wc/Math.max(1,t.min)));
+ const total=Math.min(100,content+grammar+sentence+vocab+length);
+ let missing=t.keywords.filter(k=>!low.includes(k.toLowerCase()));
+ let note=[];
+ if(content<25)note.push('Le contenu ne répond pas encore assez précisément à la question.');
+ if(!/^[A-ZÄÖÜ]/.test(txt))note.push('Commence la phrase par une majuscule.');
+ if(!/[.!?]$/.test(txt))note.push('Ajoute un signe de ponctuation final.');
+ if(t.prompt.includes('weil')&&!low.includes('weil'))note.push('Utilise « weil » et place le verbe conjugué à la fin de la subordonnée.');
+ if(t.id==='F08' && !low.includes('nachts'))note.push('Le texte dit que l’animal est actif la nuit : cette information doit apparaître dans ta justification.');
+ return {total,content,grammar,sentence,vocab,length,missing,note};
+}
+checkFreeAnswer=function(){
+ const t=freeCurrent,raw=document.getElementById('freeText').value;
+ if(!raw.trim()){document.getElementById('freeFeedback').innerHTML='<p class="v10-wrong">Écris d’abord une réponse.</p>';return;}
+ const a=germanOpenAnalysisV10(t,raw);
+ state.freeAnswers[t.id]={text:raw,score:a.total,date:today()};record(t.skill,a.total>=75);state.xp+=Math.round(a.total/4);
+ const label=a.total>=85?'✅ Sehr gut':a.total>=65?'🟠 Teilweise richtig':'🔴 Noch zu verbessern';
+ document.getElementById('freeFeedback').innerHTML=`<div class="v10-correction ${a.total>=75?'good':'bad'}">
+ <div class="open-score">${a.total}%</div><h3>${label}</h3>
+ <div class="feedback-grid">
+ <div class="feedback-cell"><strong>Inhalt</strong><br>${a.content}/40</div>
+ <div class="feedback-cell"><strong>Grammatik</strong><br>${a.grammar}/15</div>
+ <div class="feedback-cell"><strong>Satzbau</strong><br>${a.sentence}/15</div>
+ <div class="feedback-cell"><strong>Wortschatz</strong><br>${a.vocab}/15</div>
+ <div class="feedback-cell"><strong>Länge</strong><br>${a.length}/15</div></div>
+ <div class="v10-answerline"><strong>Ta réponse :</strong> ${raw.replace(/</g,'&lt;')}</div>
+ ${a.note.length?`<div class="v10-explain"><strong>À corriger :</strong><ul>${a.note.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'<div class="v10-explain">La réponse contient les éléments essentiels attendus.</div>'}
+ ${a.missing.length?`<p><strong>Éléments importants manquants :</strong> ${a.missing.join(' · ')}</p>`:''}
+ <div class="v10-answerline"><span class="v10-right">Proposition de réponse correcte :</span><br>${t.model}</div>
+ <div class="v10-retry"><button class="btn secondary" onclick="document.getElementById('freeText').focus()">✍️ Améliorer ma réponse</button><button class="btn" onclick="renderFree(freeFilter)">Neue Aufgabe</button></div></div>`;
+ save();
+}
+
+// --- Lese-Marathon: show every correct/wrong answer and the solution ---
+finishLongReading=function(){
+ let correct=0,details=[];
+ lrCurrent.questions.forEach((q,i)=>{
+   const sel=Number(lrAnswers[i]),ok=sel===q[2];if(ok)correct++;record(q[3],ok);
+   details.push({i,q,sel,ok});
+ });
+ const pct=Math.round(100*correct/lrCurrent.questions.length);state.longReading[lrCurrent.id]={score:pct,date:today()};state.xp+=correct*30;
+ // color visible options
+ details.forEach(d=>{
+   const inputs=document.querySelectorAll(`input[name="lr${d.i}"]`);
+   inputs.forEach(inp=>{
+     const lab=inp.closest('label');const v=Number(inp.value);
+     if(v===d.q[2])lab.classList.add('lr-correct');
+     else if(v===d.sel&&!d.ok)lab.classList.add('lr-wrong');
+     inp.disabled=true;
+   });
+ });
+ document.getElementById('lrFeedback').innerHTML=`<div class="v10-correction ${pct>=75?'good':'bad'}"><div class="open-score">${pct}%</div><p>${correct}/${lrCurrent.questions.length} richtig · +${correct*30} XP</p>
+ <h3>Correction détaillée</h3>${details.map(d=>`<div class="v10-answerline"><strong>${d.i+1}.</strong> ${d.ok?'✅':'❌'} ${d.q[0]}<br>
+ <span class="v10-right">Bonne réponse :</span> ${d.q[1][d.q[2]]}${d.sel>=0&&!d.ok?`<br><span class="v10-wrong">Ta réponse :</span> ${d.q[1][d.sel]}`:''}</div>`).join('')}
+ <button class="btn secondary" onclick="openLongReading('${lrCurrent.id}')">🔁 Refaire ce texte</button></div>`;
+ save();
+}
+
+// --- Statistics = more playful reward system ---
+const updateStatsV10base=updateStats;
+updateStats=function(){
+ updateStatsV10base();
+ const xp=state.xp;
+ const levels=[['Rookie',0,'🌱'],['Explorer',500,'🧭'],['Challenger',1500,'⚡'],['Champion',3000,'🏆'],['Gymnasium Star',6000,'🌟'],['Legend',10000,'👑']];
+ let idx=0;for(let i=0;i<levels.length;i++)if(xp>=levels[i][1])idx=i;
+ const cur=levels[idx],next=levels[Math.min(levels.length-1,idx+1)];
+ document.getElementById('v10Level').textContent=`${cur[2]} ${cur[0]}`;
+ const span=Math.max(1,next[1]-cur[1]),progress=idx===levels.length-1?100:Math.round(100*(xp-cur[1])/span);
+ document.getElementById('v10RewardBar').style.width=Math.max(0,Math.min(100,progress))+'%';
+ document.getElementById('v10NextReward').textContent=idx===levels.length-1?'Niveau maximal atteint 👑':`${next[1]-xp} XP jusqu’à ${next[2]} ${next[0]}`;
+ document.getElementById('v10Medals').innerHTML=levels.slice(1).map(l=>`<div class="medal ${xp>=l[1]?'':'locked'}"><div class="ico">${l[2]}</div><strong>${l[0]}</strong><div class="tiny">${l[1]} XP</div></div>`).join('');
+ const d=['T0DE','T0MA','T0LO','T0MX'];
+ document.getElementById('v10DiagStats').innerHTML=d.map(id=>`<div class="quest"><span>${diagLabelV10(id)}</span><strong>${state.v10diag.done[id]?state.v10diag.scores[id]+'%':'—'}</strong></div>`).join('');
+ const weak=weakSkills(c=>c.priority==='P0',3),strong=COMPETENCES.filter(c=>scoreOf(c.id)!==null).sort((a,b)=>scoreOf(b.id)-scoreOf(a.id)).slice(0,3);
+ document.getElementById('v10Strengths').innerHTML=`<strong>🚀 Stärken</strong><br>${strong.length?strong.map(c=>`${c.label} · ${scoreOf(c.id)}%`).join('<br>'):'Noch keine Daten'}
+ <hr style="border-color:#343d5d"><strong>🎯 Priorités</strong><br>${weak.map(c=>`${c.label} · ${scoreOf(c.id)===null?'non testé':scoreOf(c.id)+'%'}`).join('<br>')}`;
+}
+
+// Add diagnostic message to home
+function v10HomeDiagnostic(){
+ let el=document.getElementById('v10DiagHome');
+ if(!el){el=document.createElement('div');el.id='v10DiagHome';const home=document.getElementById('home');home.insertBefore(el,home.firstChild);}
+ const n=['T0DE','T0MA','T0LO','T0MX'].filter(id=>state.v10diag.done[id]).length;
+ el.innerHTML=!diagCompleteV10()?`<div class="diag-banner"><h2>🧭 Étape 1 : diagnostic de départ ${n}/4</h2><p>Avant les Daily Quests classiques, Alicia commence par mesurer Deutsch, Mathematik et Logik. Ensuite le coach s’adapte automatiquement.</p><button class="btn gold" onclick="showScreen('t0tests')">Commencer / continuer le diagnostic</button></div>`:'';
+}
+
+// Make current difficulty selection more adaptive
+pickExerciseForSkill=function(skill){
+ const arr=EXERCISES.filter(e=>e.skill===skill);if(!arr.length)return null;
+ const target=targetDifficultyV10(skill);
+ const notDone=arr.filter(e=>!state.completedExercises.includes(e.id));
+ const src=notDone.length?notDone:arr;
+ return [...src].sort((a,b)=>Math.abs((a.difficulty||1)-target)-Math.abs((b.difficulty||1)-target))[0];
+}
+
+// V10 update hook
+const updateAllV10base=updateAll;
+updateAll=function(){
+ updateAllV10base();
+ renderLogicHubV10();v10HomeDiagnostic();
+}
+
+
+// ===================== V10.2 WORTSCHATZ + GRAMMATIK MATRIX =====================
+state.vocabTheme = state.vocabTheme || {};
+state.vocabV10 = state.vocabV10 || {currentTheme:null,learnIndex:0,test:null};
+
+const VOCAB_THEMES_V10 = [
+ {id:'schule',icon:'🏫',title:'Schule & Unterricht',matrix:'D109',level:'GS 3/4',grammar:['D45','D48','D53','D70'],grammarTitle:'Nomen · Artikel · Satzglieder',
+  grammarNote:'Schulwörter sind oft Nomen: der Unterricht, die Aufgabe, das Heft. Nomen schreibt man groß und lernt sie immer mit Artikel.',
+  words:[
+   ['die Aufgabe','l’exercice / la tâche','Bearbeite die Aufgabe sorgfältig.'],['der Unterricht','le cours / l’enseignement','Der Unterricht beginnt um acht Uhr.'],['das Heft','le cahier','Schreibe die Lösung in dein Heft.'],['die Tafel','le tableau','Die Lehrerin schreibt an die Tafel.'],['ankreuzen','cocher','Kreuze die richtige Antwort an.'],['ergänzen','compléter','Ergänze den fehlenden Satz.'],['zuordnen','associer','Ordne die Begriffe den Bildern zu.'],['begründen','justifier','Begründe deine Antwort.'],['vergleichen','comparer','Vergleiche die beiden Texte.'],['überprüfen','vérifier','Überprüfe dein Ergebnis.'],['die Lösung','la solution','Kontrolliere deine Lösung.'],['der Abschnitt','le paragraphe / la partie','Lies den zweiten Abschnitt.']
+  ]},
+ {id:'mathe',icon:'🔢',title:'Mathematik',matrix:'D110',level:'GS 3/4',grammar:['D45','D53','D58','D70'],grammarTitle:'Nomen mit Artikel · Komposita',
+  grammarNote:'Mathematische Fachwörter sind häufig Nomen oder Komposita: der Lösungsweg, die Zahlengerade, das Würfelnetz.',
+  words:[
+   ['die Summe','la somme','Berechne die Summe.'],['die Differenz','la différence','Bestimme die Differenz.'],['das Produkt','le produit','Das Produkt von 6 und 8 ist 48.'],['der Quotient','le quotient','Der Quotient ist das Ergebnis einer Division.'],['verdoppeln','doubler','Verdopple die Zahl 24.'],['halbieren','diviser par deux','Halbiere die Zahl 80.'],['runden','arrondir','Runde auf den nächsten Hunderter.'],['schätzen','estimer','Schätze zuerst das Ergebnis.'],['der Lösungsweg','la démarche de résolution','Erkläre deinen Lösungsweg.'],['das Ergebnis','le résultat','Kontrolliere dein Ergebnis.'],['die Zahlengerade','la droite numérique','Markiere die Zahl auf der Zahlengeraden.'],['der Rest','le reste','Bei der Division bleibt ein Rest.']
+  ]},
+ {id:'deutsch',icon:'📘',title:'Deutschunterricht',matrix:'D111',level:'GS 3/4',grammar:['D45','D46','D47','D54','D70','D71','D72'],grammarTitle:'Wortarten · Subjekt · Prädikat',
+  grammarNote:'Im Deutschunterricht musst du Wortarten und Satzglieder sicher benennen: Nomen, Verb, Adjektiv, Subjekt und Prädikat.',
+  words:[
+   ['das Nomen','le nom','Nomen schreibt man groß.'],['das Verb','le verbe','Finde das Verb im Satz.'],['das Adjektiv','l’adjectif','Das Adjektiv beschreibt ein Nomen.'],['der Artikel','l’article','Welcher Artikel passt?'],['das Subjekt','le sujet','Bestimme das Subjekt.'],['das Prädikat','le prédicat','Unterstreiche das Prädikat.'],['die Grundform','l’infinitif','Schreibe das Verb in der Grundform.'],['die Wortfamilie','la famille de mots','Finde Wörter aus derselben Wortfamilie.'],['der Wortstamm','le radical','Markiere den Wortstamm.'],['die Überschrift','le titre','Welche Überschrift passt?'],['die Aussage','l’affirmation','Welche Aussage stimmt?'],['zusammenfassen','résumer','Fasse den Absatz zusammen.']
+  ]},
+ {id:'zeit',icon:'⏰',title:'Zeit & Tagesablauf',matrix:'D112',level:'GS 3/4',grammar:['D61','D62','D63'],grammarTitle:'Präsens · Präteritum · Perfekt',
+  grammarNote:'Pour parler du temps et raconter une journée, Alicia doit reconnaître et employer présent, prétérit et Perfekt.',
+  words:[
+   ['heute','aujourd’hui','Heute habe ich Training.'],['gestern','hier','Gestern war ich in der Schule.'],['morgen','demain','Morgen schreibe ich einen Test.'],['morgens','le matin','Morgens frühstücke ich.'],['nachmittags','l’après-midi','Nachmittags trainiere ich.'],['abends','le soir','Abends lese ich.'],['die Dauer','la durée','Berechne die Dauer.'],['beginnen','commencer','Der Unterricht beginnt um acht Uhr.'],['enden','finir','Das Training endet um sechs Uhr.'],['pünktlich','à l’heure','Sei bitte pünktlich.']
+  ]},
+ {id:'familie',icon:'👨‍👩‍👧',title:'Familie & Zusammenleben',matrix:'D113',level:'GS 3/4',grammar:['D49','D52','D53'],grammarTitle:'Pronomen · Singular/Plural · Genus',
+  grammarNote:'Les thèmes familiaux permettent de sécuriser er/sie/es, les genres der/die/das et les formes singulier/pluriel.',
+  words:[
+   ['die Familie','la famille','Meine Familie lebt im Elsass.'],['die Eltern','les parents','Meine Eltern arbeiten.'],['die Geschwister','les frères et sœurs','Hast du Geschwister?'],['die Tochter','la fille','Sie ist die Tochter.'],['der Sohn','le fils','Er ist der Sohn.'],['gemeinsam','ensemble','Wir essen gemeinsam.'],['helfen','aider','Ich helfe meiner Schwester.'],['streiten','se disputer','Manchmal streiten Geschwister.'],['sich vertragen','s’entendre / se réconcilier','Danach vertragen sie sich wieder.'],['verantwortlich','responsable','Jeder ist für etwas verantwortlich.']
+  ]},
+ {id:'koerper',icon:'🧍',title:'Körper',matrix:'D114',level:'GS 3/4',grammar:['D45','D52','D53'],grammarTitle:'Artikel · Singular/Plural',
+  grammarNote:'Apprendre les parties du corps avec leur article et leur pluriel lorsqu’il existe.',
+  words:[
+   ['der Kopf','la tête','Mein Kopf tut nicht weh.'],['der Arm','le bras','Strecke den Arm aus.'],['die Hand','la main','Heb deine Hand.'],['das Bein','la jambe','Beuge das Bein.'],['der Fuß','le pied','Der Fuß steht auf dem Boden.'],['der Rücken','le dos','Halte den Rücken gerade.'],['das Knie','le genou','Das Knie ist gebeugt.'],['die Schulter','l’épaule','Drehe die Schultern.'],['der Muskel','le muscle','Der Muskel erzeugt Kraft.'],['sich bewegen','bouger','Kinder sollen sich viel bewegen.']
+  ]},
+ {id:'gesundheit',icon:'❤️',title:'Gesundheit',matrix:'D115',level:'GS 4 / G5',grammar:['D34','D37','D75'],grammarTitle:'weil-Satz · Hauptsatz/Nebensatz',
+  grammarNote:'Santé = excellent thème pour justifier : « Schlaf ist wichtig, weil sich der Körper erholt. » Dans la subordonnée avec weil, le verbe va à la fin.',
+  words:[
+   ['gesund','en bonne santé','Bewegung hält gesund.'],['die Gesundheit','la santé','Gesundheit ist wichtig.'],['der Schlaf','le sommeil','Kinder brauchen genügend Schlaf.'],['sich erholen','récupérer','Der Körper muss sich erholen.'],['die Ernährung','l’alimentation','Eine gute Ernährung ist wichtig.'],['trinken','boire','Beim Sport muss man genug trinken.'],['die Verletzung','la blessure','Die Verletzung muss heilen.'],['die Pause','la pause','Nach der Belastung braucht man eine Pause.'],['fit','en forme','Heute fühle ich mich fit.'],['müde','fatigué','Nach einem langen Tag bin ich müde.']
+  ]},
+ {id:'natur',icon:'🌿',title:'Natur',matrix:'D116',level:'GS 3/4',grammar:['D45','D47','D52','D53'],grammarTitle:'Nomen · Adjektive · Plural',
+  grammarNote:'Décrire la nature mobilise noms + articles, pluriels et adjectifs précis.',
+  words:[
+   ['die Pflanze','la plante','Die Pflanze braucht Licht.'],['der Baum','l’arbre','Der Baum wächst im Wald.'],['die Blüte','la fleur / floraison','Die Biene fliegt zur Blüte.'],['das Insekt','l’insecte','Das Insekt findet Nahrung.'],['der Wald','la forêt','Im Wald leben viele Tiere.'],['die Wiese','la prairie','Auf der Wiese wachsen Blumen.'],['wachsen','pousser','Pflanzen wachsen im Frühling.'],['blühen','fleurir','Im Sommer blühen viele Pflanzen.'],['trocken','sec','Der Boden ist trocken.'],['feucht','humide','Die Luft ist feucht.']
+  ]},
+ {id:'umwelt',icon:'♻️',title:'Umwelt',matrix:'D117',level:'GS 4 / G5',grammar:['D33','D34','D35','D37'],grammarTitle:'Konnektoren · weil · dass',
+  grammarNote:'Le thème environnement entraîne les connecteurs et la justification : weil, deshalb, dass, aber.',
+  words:[
+   ['die Umwelt','l’environnement','Wir schützen die Umwelt.'],['der Müll','les déchets','Wir sammeln Müll im Park.'],['trennen','trier / séparer','Wir trennen Papier und Plastik.'],['recyceln','recycler','Glas kann recycelt werden.'],['vermeiden','éviter','Wir vermeiden unnötigen Müll.'],['schützen','protéger','Wir müssen Tiere schützen.'],['verschmutzen','polluer','Abfall kann Wasser verschmutzen.'],['die Energie','l’énergie','Wir sparen Energie.'],['sparen','économiser','Wir sparen Wasser.'],['nachhaltig','durable','Nachhaltiges Handeln hilft der Umwelt.']
+  ]},
+ {id:'sport',icon:'🎾',title:'Freizeit & Sport',matrix:'D118',level:'GS 3/4 / G5',grammar:['D61','D65','D66','D67','D68'],grammarTitle:'Verben · Modalverben · trennbare Verben',
+  grammarNote:'Sport est idéal pour automatiser les verbes : trainieren, gewinnen, aufwärmen, muss/kann/soll.',
+  words:[
+   ['trainieren','s’entraîner','Ich trainiere heute Tennis.'],['das Training','l’entraînement','Das Training dauert 90 Minuten.'],['der Wettkampf','la compétition','Am Wochenende ist ein Wettkampf.'],['gewinnen','gagner','Sie möchte das Match gewinnen.'],['verlieren','perdre','Man kann ein Spiel verlieren.'],['sich aufwärmen','s’échauffer','Vor dem Match wärme ich mich auf.'],['die Ausdauer','l’endurance','Ausdauer hilft im langen Match.'],['die Schnelligkeit','la vitesse','Wir trainieren die Schnelligkeit.'],['die Bewegung','le mouvement','Bewegung ist gesund.'],['sich konzentrieren','se concentrer','Ich muss mich konzentrieren.'],['der Schläger','la raquette','Ich halte den Schläger fest.'],['der Ballwechsel','l’échange','Der Ballwechsel dauert lange.']
+  ]},
+ {id:'gefuehle',icon:'😊',title:'Gefühle',matrix:'D119',level:'GS 4 / G5',grammar:['D47','D67','D69'],grammarTitle:'Adjektive · Modalverben · reflexive Verben',
+  grammarNote:'Les émotions mobilisent adjectifs et verbes réfléchis : sich freuen, sich ärgern, sich fühlen.',
+  words:[
+   ['glücklich','heureux','Ich bin glücklich.'],['traurig','triste','Sie ist traurig.'],['nervös','nerveux','Vor dem Test bin ich nervös.'],['stolz','fier','Ich bin stolz auf meine Leistung.'],['enttäuscht','déçu','Nach der Niederlage war sie enttäuscht.'],['sich freuen','se réjouir','Ich freue mich auf das Turnier.'],['sich ärgern','s’énerver','Ich ärgere mich über den Fehler.'],['mutig','courageux','Sie bleibt mutig.'],['ruhig','calme','Bleib ruhig und konzentriert.'],['sicher','sûr / confiant','Ich fühle mich sicher.']
+  ]},
+ {id:'stadt',icon:'🏙️',title:'Stadt & Orientierung',matrix:'D120',level:'GS 4 / G5',grammar:['D50','D77','D78','D79'],grammarTitle:'Präpositionen · Kasus',
+  grammarNote:'Se repérer dans la ville prépare les prépositions et progressivement Nominativ/Akkusativ/Dativ.',
+  words:[
+   ['die Stadt','la ville','Die Stadt ist groß.'],['die Straße','la rue','Wir gehen über die Straße.'],['der Platz','la place','Wir treffen uns auf dem Platz.'],['das Rathaus','la mairie','Das Rathaus steht im Zentrum.'],['die Bibliothek','la bibliothèque','Ich gehe in die Bibliothek.'],['gegenüber','en face','Die Schule liegt gegenüber dem Park.'],['zwischen','entre','Das Café liegt zwischen zwei Häusern.'],['geradeaus','tout droit','Gehe geradeaus.'],['abbiegen','tourner','Biege links ab.'],['die Kreuzung','le carrefour','An der Kreuzung gehst du rechts.']
+  ]},
+ {id:'verkehr',icon:'🚲',title:'Verkehr & Sicherheit',matrix:'D121',level:'GS 3/4',grammar:['D67','D68','D75'],grammarTitle:'Modalverben · trennbare Verben',
+  grammarNote:'Les consignes de sécurité utilisent souvent muss/soll/darf et des verbes séparables comme abbiegen.',
+  words:[
+   ['der Verkehr','la circulation','Im Verkehr muss man aufmerksam sein.'],['das Fahrrad','le vélo','Ich fahre mit dem Fahrrad.'],['der Fußgänger','le piéton','Der Fußgänger wartet.'],['die Ampel','le feu de circulation','Die Ampel ist rot.'],['der Zebrastreifen','le passage piéton','Wir gehen über den Zebrastreifen.'],['abbiegen','tourner','Ich biege rechts ab.'],['bremsen','freiner','Man muss rechtzeitig bremsen.'],['aufpassen','faire attention','Pass gut auf!'],['erlaubt','autorisé','Hier ist Radfahren erlaubt.'],['verboten','interdit','Hier ist Parken verboten.']
+  ]},
+ {id:'essen',icon:'🥕',title:'Essen',matrix:'D122',level:'GS 3/4',grammar:['D45','D52','D53','D78'],grammarTitle:'Artikel · Plural · Akkusativ',
+  grammarNote:'Le vocabulaire alimentaire permet d’entraîner der/die/das, pluriels et progressivement l’accusatif : Ich esse einen Apfel.',
+  words:[
+   ['das Frühstück','le petit-déjeuner','Ich esse Frühstück.'],['das Gemüse','les légumes','Gemüse ist gesund.'],['das Obst','les fruits','Ich esse gern Obst.'],['der Apfel','la pomme','Ich esse einen Apfel.'],['das Brot','le pain','Wir kaufen Brot.'],['das Getränk','la boisson','Wasser ist ein Getränk.'],['hungrig','avoir faim','Nach dem Training bin ich hungrig.'],['durstig','avoir soif','Ich bin durstig.'],['schmecken','avoir bon goût','Die Suppe schmeckt gut.'],['zubereiten','préparer','Wir bereiten das Essen zu.']
+  ]},
+ {id:'tiere',icon:'🐾',title:'Tiere',matrix:'D123',level:'GS 3/4 / G5',grammar:['D45','D47','D52','D53','D34'],grammarTitle:'Nomen · Adjektive · weil',
+  grammarNote:'Décrire les animaux mobilise articles, pluriels, adjectifs et justification avec weil.',
+  words:[
+   ['das Tier','l’animal','Das Tier lebt im Wald.'],['das Säugetier','le mammifère','Der Delfin ist ein Säugetier.'],['der Vogel','l’oiseau','Der Vogel kann fliegen.'],['das Insekt','l’insecte','Die Biene ist ein Insekt.'],['das Fell','le pelage','Der Hund hat ein Fell.'],['die Feder','la plume','Vögel haben Federn.'],['nachtaktiv','nocturne','Die Eule ist nachtaktiv.'],['wild','sauvage','Das ist ein wildes Tier.'],['zahm','apprivoisé','Das Tier ist zahm.'],['sich ernähren','se nourrir','Das Tier ernährt sich von Pflanzen.']
+  ]}
+];
+
+function vocabThemeStateV10(id){
+ if(!state.vocabTheme[id])state.vocabTheme[id]={learned:0,testBest:0,testAttempts:0,lastDate:null};
+ return state.vocabTheme[id];
+}
+function themeWordsV10(theme){
+ return theme.words.map((w,i)=>({id:`VT-${theme.id}-${i}`,de:w[0],fr:w[1],ex:w[2],group:theme.title,theme:theme.id,matrix:theme.matrix}));
+}
+function allThemeWordsV10(){return VOCAB_THEMES_V10.flatMap(themeWordsV10);}
+function themeProgressV10(t){
+ const s=vocabThemeStateV10(t.id);
+ return Math.round((Math.min(1,s.learned/t.words.length)*45)+(Math.min(100,s.testBest)*.55));
+}
+function renderVocabPathV10(){
+ const learned=VOCAB_THEMES_V10.filter(t=>vocabThemeStateV10(t.id).learned>=t.words.length).length;
+ const passed=VOCAB_THEMES_V10.filter(t=>vocabThemeStateV10(t.id).testBest>=80).length;
+ document.getElementById('vocabLearnedThemes').textContent=`${learned}/${VOCAB_THEMES_V10.length}`;
+ document.getElementById('vocabPassedThemes').textContent=`${passed}/${VOCAB_THEMES_V10.length}`;
+ document.getElementById('knownWords').textContent=allThemeWordsV10().filter(w=>(state.vocab[w.id]?.level||0)>=3).length;
+ document.getElementById('dueWords').textContent=allThemeWordsV10().filter(w=>!state.vocab[w.id] || (state.vocab[w.id].next||0)<=Date.now()).length;
+ document.getElementById('vocabThemeGrid').innerHTML=VOCAB_THEMES_V10.map((t,idx)=>{
+   const s=vocabThemeStateV10(t.id),p=themeProgressV10(t),ready=s.learned>=Math.ceil(t.words.length*.6);
+   return `<div class="vocab-theme ${s.testBest>=80?'done':''}">
+    <div class="theme-icon">${t.icon}</div><div class="theme-level">${t.level} · Matrix ${t.matrix}</div>
+    <h3>${t.title}</h3><div class="muted">${t.words.length} Wörter · ${t.grammarTitle}</div>
+    <div class="theme-progress"><div style="width:${p}%"></div></div>
+    <div class="mastery-row"><span class="mastery-pill">🎧 ${s.learned}/${t.words.length}</span><span class="mastery-pill ${s.testBest>=80?'ok':''}">🧪 ${s.testBest||0}%</span></div>
+    <div class="theme-actions" style="margin-top:10px"><button class="btn" onclick="startThemeLearnV10('${t.id}')">Lernen</button>
+    <button class="btn ${ready?'gold':'secondary'}" onclick="startThemeTestV10('${t.id}')" ${ready?'':'disabled'}>Test</button></div></div>`;
+ }).join('');
+ renderVocabStatsV10();
+}
+function showVocabTabV10(tab,btn){
+ ['vocabPathPane','vocabLearnPane','vocabTestPane','vocabReviewPane','vocabStatsPane'].forEach(id=>document.getElementById(id).style.display='none');
+ document.querySelectorAll('.vocab-tabs button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
+ if(tab==='path'){document.getElementById('vocabPathPane').style.display='block';renderVocabPathV10();}
+ if(tab==='review'){document.getElementById('vocabReviewPane').style.display='block';renderReviewV10();}
+ if(tab==='stats'){document.getElementById('vocabStatsPane').style.display='block';renderVocabStatsV10();}
+}
+function backToVocabPathV10(){document.getElementById('vocabLearnPane').style.display='none';document.getElementById('vocabTestPane').style.display='none';document.getElementById('vocabPathPane').style.display='block';renderVocabPathV10();}
+function speakGermanV10(txt){
+ if(!('speechSynthesis' in window))return;
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='de-DE';u.rate=.82;
+ const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith('de'));if(v)u.voice=v;speechSynthesis.speak(u);
+}
+function startThemeLearnV10(id){
+ state.vocabV10.currentTheme=id;state.vocabV10.learnIndex=0;
+ document.getElementById('vocabPathPane').style.display='none';document.getElementById('vocabTestPane').style.display='none';document.getElementById('vocabLearnPane').style.display='block';
+ renderThemeWordV10(true);
+}
+function renderThemeWordV10(autoAudio=false){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme),i=state.vocabV10.learnIndex,w=themeWordsV10(t)[i];
+ const st=vocabThemeStateV10(t.id);
+ document.getElementById('vocabLearnCard').innerHTML=`<div class="theme-level">${t.icon} ${t.title} · ${t.level} · Wort ${i+1}/${t.words.length}</div>
+ <div class="learn-word">${w.de}</div><div class="learn-fr">${w.fr}</div>
+ <div class="learn-example">${w.ex}</div>
+ <div class="learn-controls"><button class="btn secondary" onclick="speakGermanV10('${w.de.replace(/'/g,"\\'")}')">🔊 Wort</button>
+ <button class="btn secondary" onclick="speakGermanV10('${w.ex.replace(/'/g,"\\'")}')">🔊 Satz</button>
+ <button class="btn danger" onclick="rateThemeWordV10(0)">😵 Noch nicht</button><button class="btn" onclick="rateThemeWordV10(2)">🙂 Verstanden</button><button class="btn green" onclick="rateThemeWordV10(3)">🚀 Sicher</button></div>
+ <div class="grammar-box"><span class="badge gold">GRAMMATIK · ${t.grammar.join(' · ')}</span><h3 style="margin-top:8px">${t.grammarTitle}</h3><p>${t.grammarNote}</p>
+ <button class="btn secondary" onclick="openThemeGrammarV10('${t.id}')">Grammatik-Mini-Training</button></div>`;
+ if(autoAudio)setTimeout(()=>speakGermanV10(w.de+'. '+w.ex),250);
+}
+function rateThemeWordV10(r){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme),i=state.vocabV10.learnIndex,w=themeWordsV10(t)[i];
+ const s=vocabState(w.id);s.seen=(s.seen||0)+1;
+ if(r===0){s.level=Math.max(0,(s.level||0)-1);s.next=Date.now()+10*60*1000;}
+ if(r===2){s.correct=(s.correct||0)+1;s.level=Math.min(5,(s.level||0)+1);s.next=Date.now()+2*24*3600*1000;}
+ if(r===3){s.correct=(s.correct||0)+1;s.level=Math.min(6,(s.level||0)+2);s.next=Date.now()+5*24*3600*1000;}
+ const ts=vocabThemeStateV10(t.id);ts.learned=Math.max(ts.learned,i+1);ts.lastDate=today();state.xp+=r===0?2:r===2?8:12;
+ state.vocabV10.learnIndex++;
+ if(state.vocabV10.learnIndex>=t.words.length){
+  ts.learned=t.words.length;save();document.getElementById('vocabLearnCard').innerHTML=`<h2>🏆 Thema gelernt!</h2><p>${t.title}: ${t.words.length} Wörter wurden durchgearbeitet.</p><button class="btn gold" onclick="startThemeTestV10('${t.id}')">🧪 Thematischer Test</button><button class="btn secondary" onclick="backToVocabPathV10()">Zurück</button>`;
+  if(typeof coachShow==='function')coachShow('improve',['📚','Wortschatz-Level geschafft!',t.title+' ist bereit für den Test.']);return;
+ }
+ saveSilent();renderThemeWordV10(true);
+}
+function openThemeGrammarV10(id){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===id),items=[];
+ t.grammar.forEach(skill=>{const arr=guaranteedExercisesForCompetence(skill,2);items.push(...arr);});
+ startSession(items.slice(0,8),'v10Exercise','training');document.getElementById('v10RunnerTitle').textContent='🔤 Grammatik · '+t.title;document.getElementById('v10RunnerSub').textContent=t.grammarTitle+' · Matrix '+t.grammar.join(', ');showScreen('runner');
+}
+function startThemeTestV10(id){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===id),words=themeWordsV10(t),qs=[];
+ for(let i=0;i<10;i++){
+   const w=words[i%words.length],direction=i%2===0?'de-fr':'fr-de';
+   const distract=shuffle(words.filter(x=>x.id!==w.id)).slice(0,3);
+   if(direction==='de-fr')qs.push({q:`Was bedeutet „${w.de}“?`,options:shuffle([w.fr,...distract.map(x=>x.fr)]),answerText:w.fr,word:w});
+   else qs.push({q:`Quel mot allemand signifie « ${w.fr} » ?`,options:shuffle([w.de,...distract.map(x=>x.de)]),answerText:w.de,word:w});
+ }
+ state.vocabV10.currentTheme=id;state.vocabV10.test={items:qs,index:0,correct:0,answers:[]};
+ document.getElementById('vocabPathPane').style.display='none';document.getElementById('vocabLearnPane').style.display='none';document.getElementById('vocabTestPane').style.display='block';renderThemeTestQV10();
+}
+function renderThemeTestQV10(){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme),s=state.vocabV10.test;
+ if(s.index>=s.items.length){finishThemeTestV10();return;}
+ const q=s.items[s.index];
+ document.getElementById('vocabThemeTest').innerHTML=`<span class="badge gold">TEST · ${t.title}</span><h2 style="margin-top:10px">${s.index+1}/10 · ${q.q}</h2>
+ ${q.options.map((o,i)=>`<button class="vocab-test-option" onclick="answerThemeTestV10(${i})">${o}</button>`).join('')}<div id="vocabTestFeedback"></div>`;
+}
+function answerThemeTestV10(i){
+ const s=state.vocabV10.test,q=s.items[s.index],chosen=q.options[i],ok=chosen===q.answerText;
+ document.querySelectorAll('.vocab-test-option').forEach(b=>{b.disabled=true;if(b.textContent===q.answerText)b.classList.add('correct');else if(b.textContent===chosen)b.classList.add('wrong');});
+ if(ok)s.correct++;s.answers.push({ok,chosen,right:q.answerText});
+ const ws=vocabState(q.word.id);ws.seen=(ws.seen||0)+1;if(ok){ws.correct=(ws.correct||0)+1;ws.level=Math.min(6,(ws.level||0)+1);ws.next=Date.now()+3*24*3600*1000;}else{ws.level=Math.max(0,(ws.level||0)-1);ws.next=Date.now()+20*60*1000;}
+ document.getElementById('vocabTestFeedback').innerHTML=`<div class="v10-correction ${ok?'good':'bad'}"><strong>${ok?'✅ Richtig':'❌ Noch nicht'}</strong><br>Bonne réponse : <span class="v10-right">${q.answerText}</span><br><button class="btn" style="margin-top:10px" onclick="nextThemeTestV10()">Nächste</button></div>`;saveSilent();
+}
+function nextThemeTestV10(){state.vocabV10.test.index++;renderThemeTestQV10();}
+function finishThemeTestV10(){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===state.vocabV10.currentTheme),s=state.vocabV10.test,pct=Math.round(100*s.correct/s.items.length),ts=vocabThemeStateV10(t.id);
+ ts.testAttempts++;ts.testBest=Math.max(ts.testBest,pct);ts.lastDate=today();state.xp+=s.correct*15+(pct>=80?100:0);
+ document.getElementById('vocabThemeTest').innerHTML=`<h2>${pct>=80?'🏆 Thema bestanden!':'🔁 Noch einmal trainieren'}</h2><div class="open-score">${pct}%</div><p>${s.correct}/10 richtig</p>
+ <p>${pct>=80?'Le thème est validé. Les mots continueront à revenir en répétition espacée.':'Reprends la phase Lernen puis refais le test.'}</p>
+ <button class="btn" onclick="startThemeLearnV10('${t.id}')">Lernen / Wiederholen</button> <button class="btn secondary" onclick="backToVocabPathV10()">Themenpfad</button>`;
+ if(pct>=80 && typeof coachShow==='function')coachShow('boss',['🏆','Wortschatz-Thema bestanden!',t.title+' · '+pct+'%.']);save();
+ if(state.currentDailyStep)completeCurrentDailyStep();
+}
+function renderReviewV10(){
+ const due=allThemeWordsV10().filter(w=>!state.vocab[w.id] || (state.vocab[w.id].next||0)<=Date.now()).sort((a,b)=>(state.vocab[a.id]?.level||0)-(state.vocab[b.id]?.level||0));
+ const area=document.getElementById('v10ReviewArea');
+ if(!due.length){area.innerHTML='<p>✅ Keine Wiederholung fällig. Sehr gut!</p>';return;}
+ const w=due[0];area.innerHTML=`<div class="learn-word">${w.de}</div><button class="btn secondary" onclick="speakGermanV10('${w.de.replace(/'/g,"\\'")}. ${w.ex.replace(/'/g,"\\'")}')">🔊 Hören</button>
+ <details style="margin-top:12px"><summary>Antwort zeigen</summary><p class="learn-fr">${w.fr}</p><p>${w.ex}</p></details>
+ <div class="learn-controls"><button class="btn danger" onclick="reviewRateV10('${w.id}',0)">😵 Noch nicht</button><button class="btn" onclick="reviewRateV10('${w.id}',2)">🙂 Gut</button><button class="btn green" onclick="reviewRateV10('${w.id}',3)">🚀 Sicher</button></div>`;
+ setTimeout(()=>speakGermanV10(w.de+'. '+w.ex),250);
+}
+function reviewRateV10(id,r){
+ const s=vocabState(id);s.seen=(s.seen||0)+1;
+ if(r===0){s.level=Math.max(0,(s.level||0)-1);s.next=Date.now()+10*60*1000;}
+ else{s.correct=(s.correct||0)+1;s.level=Math.min(6,(s.level||0)+(r===3?2:1));s.next=Date.now()+(r===3?5:2)*24*3600*1000;}
+ state.xp+=r===0?2:r===2?8:12;save();renderReviewV10();
+}
+function renderVocabStatsV10(){
+ const el=document.getElementById('vocabThemeStats');if(!el)return;
+ el.innerHTML=VOCAB_THEMES_V10.map(t=>{const s=vocabThemeStateV10(t.id);return `<div class="quest"><div><strong>${t.icon} ${t.title}</strong><div class="muted">${t.level} · ${t.matrix} · ${t.grammarTitle}</div></div><span><strong>${themeProgressV10(t)}%</strong> · Test ${s.testBest||0}%</span></div>`}).join('');
+}
+
+// Fix typo in function assignment safely
+function startThemeTestV10Render(){renderThemeTestQV10();}
+
+// replace the bad direct symbol after generating state
+const _startThemeTestV10base = startThemeTestV10;
+startThemeTestV10=function(id){
+ const t=VOCAB_THEMES_V10.find(x=>x.id===id),words=themeWordsV10(t),qs=[];
+ for(let i=0;i<10;i++){
+   const w=words[i%words.length],direction=i%2===0?'de-fr':'fr-de';
+   const distract=shuffle(words.filter(x=>x.id!==w.id)).slice(0,3);
+   if(direction==='de-fr')qs.push({q:`Was bedeutet „${w.de}“?`,options:shuffle([w.fr,...distract.map(x=>x.fr)]),answerText:w.fr,word:w});
+   else qs.push({q:`Quel mot allemand signifie « ${w.fr} » ?`,options:shuffle([w.de,...distract.map(x=>x.de)]),answerText:w.de,word:w});
+ }
+ state.vocabV10.currentTheme=id;state.vocabV10.test={items:qs,index:0,correct:0,answers:[]};
+ document.getElementById('vocabPathPane').style.display='none';document.getElementById('vocabLearnPane').style.display='none';document.getElementById('vocabTestPane').style.display='block';renderThemeTestQV10();
+}
+
+// Select vocabulary theme directly from matrix weakness
+function recommendedThemeV10(){
+ const phase=currentMonthPhase();
+ let candidates=VOCAB_THEMES_V10;
+ // GS/P0 first before Potenzialtest; all themes remain available manually.
+ if(phase<=3)candidates=VOCAB_THEMES_V10.filter(t=>['schule','mathe','deutsch','zeit','gesundheit','natur','umwelt','sport','verkehr','tiere'].includes(t.id));
+ return [...candidates].sort((a,b)=>{
+   const sa=scoreOf(a.matrix),sb=scoreOf(b.matrix);
+   const va=sa===null?-1:sa,vb=sb===null?-1:sb;
+   if(va!==vb)return va-vb;
+   return themeProgressV10(a)-themeProgressV10(b);
+ })[0]||VOCAB_THEMES_V10[0];
+}
+
+// After initial T0, vocabulary+grammar is a real 10-minute Daily Plan block.
+const dailyTemplateVocabBase=dailyTemplate;
+dailyTemplate=function(){
+ if(typeof diagCompleteV10==='function' && !diagCompleteV10())return dailyTemplateVocabBase();
+ const ph=currentMonthPhase(),weakDe=weakSkills(c=>c.id[0]==='D'&&((ph<=3&&c.priority==='P0')||(ph>=4&&c.priority==='K5')),5),weakMa=weakSkills(c=>c.id[0]==='M'&&((ph<=3&&c.priority==='P0')||(ph>=4&&c.priority==='K5')),5),weakLo=weakSkills(c=>c.id[0]==='L',3),vt=recommendedThemeV10();
+ if(ph<=3)return [
+   {id:'de1',min:15,icon:'📖',name:'Deutsch – Lesen',action:'deutsch',skill:weakDe[0]?.id||'D03'},
+   {id:'de2',min:10,icon:'🔤',name:'Deutsch – Grammatik/Rechtschreibung',action:'deutsch',skill:weakDe[1]?.id||'D75'},
+   {id:'ma1',min:15,icon:'🔢',name:'Mathematik auf Deutsch',action:'mathe',skill:weakMa[0]?.id||'M16'},
+   {id:'lo1',min:10,icon:'🧠',name:'Logik',action:'logik',skill:weakLo[0]?.id||'L01'},
+   {id:'vocabtheme',min:10,icon:'📚',name:`Wortschatz + Grammatik · ${vt.title}`,action:'vocabtheme:'+vt.id,skill:null}
+ ];
+ return [
+   {id:'read',min:15,icon:'📚',name:'Länger lesen / K5 Deutsch',action:'longreading',skill:weakDe[0]?.id||'D17'},
+   {id:'write',min:15,icon:'✍️',name:'Schreiben / Zusammenfassen',action:'writing',skill:weakDe[1]?.id||'D41'},
+   {id:'math',min:15,icon:'🔢',name:'K5 Mathematik',action:'mathe',skill:weakMa[0]?.id||'M61'},
+   {id:'listen',min:5,icon:'🎬',name:'Hören / echtes Deutsch',action:'resources',skill:null},
+   {id:'vocabtheme',min:10,icon:'📚',name:`Wortschatz + Grammatik · ${vt.title}`,action:'vocabtheme:'+vt.id,skill:null}
+ ];
+}
+const startDailyStepVocabBase=startDailyStep;
+startDailyStep=function(id,action,skill,min){
+ if(action&&action.startsWith('vocabtheme:')){
+   state.currentDailyStep={id,action,skill,min,date:today()};
+   const tid=action.split(':')[1];showScreen('vocab');setTimeout(()=>startThemeLearnV10(tid),50);return;
+ }
+ startDailyStepVocabBase(id,action,skill,min);
+}
+
+// daily vocabulary activity completes after successful test >=80%
+// (finishThemeTestV10 already calls completeCurrentDailyStep)
+
+// Ensure rendering on screen
+const showScreenVocabBase=showScreen;
+showScreen=function(id,btn){
+ showScreenVocabBase(id,btn);
+ if(id==='vocab')renderVocabPathV10();
+}
+
+
+// ===================== V10.2 HOTFIX — FINAL DAILY ROUTER =====================
+startDailyStep=function(id,action,skill,min){
+ state.currentDailyStep={id,action,skill,min,date:today()};
+ ensureV10Runner();
+
+ if(action && action.startsWith('diag:')){
+   startT0DomainV10(action.split(':')[1]);
+   return;
+ }
+ if(action && action.startsWith('vocabtheme:')){
+   const tid=action.split(':')[1];
+   showScreen('vocab');
+   setTimeout(()=>startThemeLearnV10(tid),30);
+   return;
+ }
+ if(skill){
+   const pack=guaranteedExercisesForCompetence(skill,6).map(e=>{
+     e.difficulty=targetDifficultyV10(skill); return e;
+   });
+   startSession(pack,'v10Exercise','training');
+   const c=COMPETENCES.find(x=>x.id===skill);
+   document.getElementById('v10RunnerTitle').textContent='🎯 '+(c?c.label:'Tagestraining');
+   document.getElementById('v10RunnerSub').textContent=`Tagesplan · ${min} Minuten · adaptiv`;
+   showScreen('runner');
+   return;
+ }
+ if(action==='vocab'){showScreen('vocab');return;}
+ if(action==='logik'){startLogicPackV10(null,12);return;}
+ if(action==='mathe'){showScreen('mathe');return;}
+ if(action==='deutsch'){showScreen('deutsch');return;}
+ if(action==='longreading'){showScreen('longreading');return;}
+ if(action==='writing'){showScreen('writing');return;}
+ if(action==='resources'){showScreen('resources');return;}
+ if(action && document.getElementById(action)){showScreen(action);return;}
+ showScreen('home');
+};
+
+// Re-render the new vocabulary path after any global refresh.
+const updateAllV102HotfixBase=updateAll;
+updateAll=function(){
+ updateAllV102HotfixBase();
+ if(document.getElementById('vocabThemeGrid')) renderVocabPathV10();
+};
 
 updateAll();
 </script>
