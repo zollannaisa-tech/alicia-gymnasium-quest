@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V10.12</title>
-<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1012.png?v=1012">
-<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1012.png?v=1012">
-<link rel="manifest" href="manifest-v1012.webmanifest?v=1012">
+<title>Alicia Gymnasium Quest – V10.14</title>
+<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1014.png?v=1014">
+<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1014.png?v=1014">
+<link rel="manifest" href="manifest-v1014.webmanifest?v=1014">
 <meta name="theme-color" content="#0d1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -198,13 +198,13 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <meta name="apple-mobile-web-app-title" content="Alicia Gymnasium Quest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Alicia Gymnasium Quest">
-<meta property="og:image" content="alicia-gymnasium-icon-v1012.png?v=1012">
+<meta property="og:image" content="alicia-gymnasium-icon-v1014.png?v=1014">
 
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.12 · TEST HELP FIX</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.14 · REAL TIME FIX</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -4383,6 +4383,83 @@ renderExerciseReviewV105=function(boxId,e,resp){
   const box=document.getElementById(boxId);if(!box)return;
   box.querySelectorAll('details').forEach(d=>d.remove());
   box.insertAdjacentHTML('beforeend',moreInfoHTMLV1012(e));
+};
+
+
+// ===================== V10.14 — REAL WORK TIME / TAGESPLAN FIX =====================
+// The Tagesplan now counts meaningful work completed anywhere on the platform,
+// including a T0 diagnostic launched directly from the Test Center.
+
+function v1014TodayWorkedMinutes(){
+  const ds=getDailyState();
+  const tpl=dailyTemplate();
+  let planned=0;
+  tpl.forEach(step=>{ if(ds.steps && ds.steps[step.id]) planned+=step.min; });
+  const free=Math.max(0, Number(state.dailyPath.activityMinutes[today()]||0));
+  return Math.max(0, planned + free);
+}
+
+renderStructuredDaily=function(){
+ const ds=getDailyState(),tpl=dailyTemplate();let completed=0,planned=0;
+ tpl.forEach(s=>{if(ds.steps[s.id]){completed++;planned+=s.min;}});
+ const mins=v1014TodayWorkedMinutes();
+ ds.minutes=mins;
+
+ if(mins>=60&&!ds.validated){
+   ds.validated=true;
+   state.dailyPath.validatedDays++;
+   state.xp+=500;
+   state.dailyPath.dayBonuses++;
+   ds.bonus=true;
+ }
+
+ document.getElementById('todayMinutes').textContent=mins;
+ document.getElementById('todayProgressBar').style.width=Math.min(100,mins/60*100)+'%';
+ document.getElementById('todayValidation').textContent=ds.validated
+   ?'✅ Tag validiert · +500 XP Tagesbonus'
+   :'Noch '+Math.max(0,60-mins)+' Minuten bis zur Tagesvalidierung';
+
+ document.getElementById('structuredDailyPlan').innerHTML=tpl.map((s,i)=>`<div class="daily-step ${ds.steps[s.id]?'done':''}"><div class="num">${ds.steps[s.id]?'✓':i+1}</div><div><strong>${s.icon} ${s.name}</strong><div class="muted">${s.min} min${s.skill?' · '+s.skill:''}</div></div>${ds.steps[s.id]?'<span class="badge">geschafft</span>':`<button class="btn" onclick="startDailyStep('${s.id}','${s.action}','${s.skill||''}',${s.min})">Start</button>`}</div>`).join('');
+ renderWeekStreak();
+ saveSilent();
+}
+
+// Wrap the current, already-correct V10.12 finishSession.
+// For diagnostics, record the REAL elapsed time (rounded to the nearest minute,
+// minimum 1 minute) before the session is closed.
+const finishSessionV1014Base=finishSession;
+finishSession=function(){
+  if(!state.session)return;
+  const s=state.session;
+  const isDiag=s.kind==='diagnostic';
+  const start=Number(s.startTs||0);
+  let elapsed=0;
+  if(isDiag && start){
+    elapsed=Math.max(1,Math.round((Date.now()-start)/60000));
+  }
+
+  // Avoid counting the same finished diagnostic twice.
+  if(isDiag && elapsed){
+    state.v1014=state.v1014||{countedDiagnostics:{}};
+    const key=today()+'|'+(state.v10diag?.current||s.boxId||'diagnostic')+'|'+start;
+    if(!state.v1014.countedDiagnostics[key]){
+      state.dailyPath.activityMinutes[today()]=(state.dailyPath.activityMinutes[today()]||0)+elapsed;
+      state.v1014.countedDiagnostics[key]=elapsed;
+    }
+  }
+
+  finishSessionV1014Base();
+
+  // Immediately refresh the Tagesplan counters even if Alicia stays in Test Center.
+  if(typeof renderStructuredDaily==='function') renderStructuredDaily();
+  if(typeof updateAll==='function') updateAll();
+};
+
+// When opening Tagesplan later, always recompute from saved work time.
+const showScreenV1014Base=showScreen;
+showScreen=function(id){
+  showScreenV1014Base(id);
+  if(id==='todayplan' && typeof renderStructuredDaily==='function') renderStructuredDaily();
 };
 
 updateAll();
