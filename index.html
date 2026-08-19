@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V10.14</title>
-<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1014.png?v=1014">
-<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1014.png?v=1014">
-<link rel="manifest" href="manifest-v1014.webmanifest?v=1014">
+<title>Alicia Gymnasium Quest – V10.16</title>
+<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1016.png?v=1016">
+<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1016.png?v=1016">
+<link rel="manifest" href="manifest-v1016.webmanifest?v=1016">
 <meta name="theme-color" content="#0d1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -198,13 +198,13 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <meta name="apple-mobile-web-app-title" content="Alicia Gymnasium Quest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Alicia Gymnasium Quest">
-<meta property="og:image" content="alicia-gymnasium-icon-v1014.png?v=1014">
+<meta property="og:image" content="alicia-gymnasium-icon-v1016.png?v=1016">
 
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.14 · REAL TIME FIX</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.16 · FRESH QUESTS + PROGRESS</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -4461,6 +4461,561 @@ showScreen=function(id){
   showScreenV1014Base(id);
   if(id==='todayplan' && typeof renderStructuredDaily==='function') renderStructuredDaily();
 };
+
+
+// ===================== V10.15 — QUESTION COUNTER + PAUSE / RESUME + TEST CENTER TIME =====================
+state.v1015 = state.v1015 || {
+  pausedSession:null,
+  countedSessions:{}
+};
+
+// ---------- UNIVERSAL QUESTION COUNTER ----------
+function v1015QuestionCounterHTML(){
+  if(!state.session) return '';
+  const pos=(state.session.pos||0)+1;
+  const total=(state.session.ids||[]).length||1;
+  return `<div class="badge gold" style="font-size:15px;padding:8px 12px;margin-bottom:10px">
+    ❓ Frage ${pos} / ${total}
+  </div>`;
+}
+
+// Add the question counter to every rendered exercise, regardless of mode.
+const showSessionCurrentV1015Base = showSessionCurrent;
+showSessionCurrent = function(){
+  showSessionCurrentV1015Base();
+  if(!state.session) return;
+  const box=document.getElementById(state.session.boxId);
+  if(!box) return;
+  if(!box.querySelector('.v1015-qcounter')){
+    const d=document.createElement('div');
+    d.className='v1015-qcounter';
+    d.innerHTML=v1015QuestionCounterHTML();
+    box.insertBefore(d, box.firstChild);
+  }else{
+    box.querySelector('.v1015-qcounter').innerHTML=v1015QuestionCounterHTML();
+  }
+  ensurePauseBarV1015();
+};
+
+// ---------- UNIVERSAL PAUSE / RESUME ----------
+function sessionSnapshotV1015(){
+  if(!state.session) return null;
+  return JSON.parse(JSON.stringify(state.session));
+}
+
+function secondsWorkedV1015(s){
+  if(!s || !s.startTs) return 0;
+  return Math.max(0, Math.round((Date.now()-Number(s.startTs))/1000));
+}
+
+function addWorkedMinutesV1015(seconds, source='training'){
+  if(!seconds) return;
+  state.v1015 = state.v1015 || {pausedSession:null,countedSessions:{}};
+  state.dailyPath = state.dailyPath || {activityMinutes:{},validatedDays:0,dayBonuses:0};
+  state.dailyPath.activityMinutes = state.dailyPath.activityMinutes || {};
+  const mins = Math.max(1, Math.round(seconds/60));
+  state.dailyPath.activityMinutes[today()] = (state.dailyPath.activityMinutes[today()]||0) + mins;
+  state.v1015.lastCountedSource = source;
+  state.v1015.lastCountedMinutes = mins;
+}
+
+function pauseCurrentSessionV1015(){
+  if(!state.session) return;
+  const s=state.session;
+  const elapsedSec=secondsWorkedV1015(s);
+
+  // Count the elapsed work now so it is not lost.
+  addWorkedMinutesV1015(elapsedSec, s.kind||'training');
+
+  const snap=sessionSnapshotV1015();
+  snap.startTs=null; // new timing starts on resume, so time is never double-counted
+  snap.pausedAt=Date.now();
+  state.v1015.pausedSession=snap;
+  state.session=null;
+
+  save();
+  showScreen('home');
+  renderResumeCardV1015();
+  if(typeof renderStructuredDaily==='function') renderStructuredDaily();
+}
+
+function abandonCurrentSessionV1015(){
+  if(!state.session) return;
+  if(confirm('Test wirklich abbrechen? Der aktuelle Fortschritt dieses Tests wird verworfen, aber die bereits gearbeitete Zeit bleibt im Tagesplan.')){
+    const s=state.session;
+    addWorkedMinutesV1015(secondsWorkedV1015(s), s.kind||'training');
+    state.session=null;
+    state.v1015.pausedSession=null;
+    save();
+    showScreen('home');
+    if(typeof renderStructuredDaily==='function') renderStructuredDaily();
+    renderResumeCardV1015();
+  }
+}
+
+function resumePausedSessionV1015(){
+  const p=state.v1015 && state.v1015.pausedSession;
+  if(!p) return;
+  state.session=JSON.parse(JSON.stringify(p));
+  state.session.startTs=Date.now();
+  state.v1015.pausedSession=null;
+
+  const box=document.getElementById(state.session.boxId);
+  const parent=box && box.closest('.screen');
+  if(parent) showScreen(parent.id);
+  else showScreen('runner');
+
+  showSessionCurrent();
+  saveSilent();
+  setTimeout(()=>{
+    const b=document.getElementById(state.session?.boxId||'');
+    if(b) b.scrollIntoView({behavior:'smooth',block:'start'});
+  },70);
+}
+
+function ensurePauseBarV1015(){
+  if(!state.session) return;
+  const box=document.getElementById(state.session.boxId);
+  if(!box) return;
+  let bar=box.querySelector('.v1015-pausebar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.className='v1015-pausebar';
+    bar.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px';
+    bar.innerHTML=`
+      <button class="btn secondary" onclick="pauseCurrentSessionV1015()">⏸ Pause · Zur Startseite</button>
+      <button class="btn danger" onclick="abandonCurrentSessionV1015()">⛔ Test abbrechen</button>
+    `;
+    const counter=box.querySelector('.v1015-qcounter');
+    if(counter) counter.insertAdjacentElement('afterend',bar);
+    else box.insertBefore(bar,box.firstChild);
+  }
+}
+
+function renderResumeCardV1015(){
+  const home=document.getElementById('home');
+  if(!home) return;
+  let card=document.getElementById('resumeCardV1015');
+  const paused=state.v1015 && state.v1015.pausedSession;
+  if(!paused){
+    if(card) card.remove();
+    return;
+  }
+  const pos=(paused.pos||0)+1,total=(paused.ids||[]).length||1;
+  if(!card){
+    card=document.createElement('div');
+    card.id='resumeCardV1015';
+    card.className='card';
+    card.style.cssText='margin-bottom:16px;border:1px solid rgba(255,208,64,.45)';
+    const first=home.querySelector('.card, .hero');
+    if(first) home.insertBefore(card,first);
+    else home.prepend(card);
+  }
+  card.innerHTML=`<h2>⏸ Angehaltenes Training</h2>
+    <p>Du hast bei <strong>Frage ${pos}/${total}</strong> pausiert.</p>
+    <button class="btn gold" onclick="resumePausedSessionV1015()">▶ Weitertrainieren</button>`;
+}
+
+// ---------- COUNT TIME FOR ALL TEST CENTER / TEST SESSIONS ----------
+function isTestCenterSessionV1015(s){
+  if(!s) return false;
+  // All diagnostic/test/exam/boss sessions count, including all T0 Test Center variants.
+  return ['diagnostic','exam','boss','test'].includes(s.kind)
+    || String(s.boxId||'').toLowerCase().includes('t0')
+    || String(s.boxId||'').toLowerCase().includes('test');
+}
+
+// Wrap current finishSession: before it clears the session, add elapsed time for ALL test sessions.
+// For other training sessions, time is still counted when paused/abandoned; daily-plan steps keep their own planned time.
+const finishSessionV1015Base = finishSession;
+finishSession = function(){
+  if(!state.session) return;
+  const s=state.session;
+  const shouldCount=isTestCenterSessionV1015(s);
+  const sec=secondsWorkedV1015(s);
+
+  // Prevent double-counting the same uninterrupted session.
+  if(shouldCount && sec){
+    const key=(s.startTs||'nostart')+'|'+(s.boxId||'box')+'|'+(s.kind||'kind');
+    state.v1015.countedSessions = state.v1015.countedSessions || {};
+    if(!state.v1015.countedSessions[key]){
+      addWorkedMinutesV1015(sec,s.kind||'test');
+      state.v1015.countedSessions[key]=true;
+    }
+  }
+
+  finishSessionV1015Base();
+
+  if(typeof renderStructuredDaily==='function') renderStructuredDaily();
+  renderResumeCardV1015();
+  save();
+};
+
+// ---------- HOME / TAGESPLAN REFRESH ----------
+const showScreenV1015Base = showScreen;
+showScreen = function(id){
+  showScreenV1015Base(id);
+  if(id==='home') setTimeout(renderResumeCardV1015,30);
+  if(id==='todayplan' && typeof renderStructuredDaily==='function'){
+    setTimeout(renderStructuredDaily,30);
+  }
+};
+
+// Make sure resume card is present after initial load.
+setTimeout(renderResumeCardV1015,350);
+
+
+// ===================== V10.16 — FRESH CONTENT + GLOBAL TIME + LEAGUE/REWARDS + PROGRESS =====================
+state.v1016 = state.v1016 || {
+  dailyQuestionIds:{},
+  dailyXpStart:{},
+  activityBySource:{},
+  celebratedDays:{},
+  screenTimer:null
+};
+
+// --- Expand the question bank ---
+const NEW_EXERCISES_V1016 = [{"id": "NDE001", "domain": "Deutsch", "title": "Modalverben", "question": "Welches Wort ist ein Modalverb?", "options": ["müssen", "lernen", "Schule", "schnell"], "answer": 0, "skill": "D67", "difficulty": 1, "explanation": "müssen ist ein Modalverb."}, {"id": "NDE002", "domain": "Deutsch", "title": "Modalverben", "question": "Welcher Satz ist richtig?", "options": ["Ich kann gut schwimmen.", "Ich gut kann schwimmen.", "Ich schwimmen kann gut.", "Kann ich gut schwimmen ich."], "answer": 0, "skill": "D67", "difficulty": 2, "explanation": "Im Hauptsatz steht das Modalverb an Position 2; der Infinitiv steht am Ende."}, {"id": "NDE003", "domain": "Deutsch", "title": "Bestimmungswort", "question": "Was ist im Wort „Vogelkäfig“ das Bestimmungswort?", "options": ["Vogel", "Käfig", "Vogelkäfig", "der"], "answer": 0, "skill": "D59", "difficulty": 1, "explanation": "Vogel bestimmt genauer, um welche Art Käfig es geht."}, {"id": "NDE004", "domain": "Deutsch", "title": "Grundwort", "question": "Was ist im Wort „Fußballplatz“ das Grundwort?", "options": ["Fuß", "Ball", "Fußball", "Platz"], "answer": 3, "skill": "D59", "difficulty": 1, "explanation": "Ein Fußballplatz ist ein Platz; deshalb ist Platz das Grundwort."}, {"id": "NDE005", "domain": "Deutsch", "title": "Komposita", "question": "Welches Wort ist ein zusammengesetztes Nomen?", "options": ["Hausaufgabe", "laufen", "schnell", "freundlich"], "answer": 0, "skill": "D58", "difficulty": 1, "explanation": "Haus + Aufgabe = Hausaufgabe."}, {"id": "NDE006", "domain": "Deutsch", "title": "Doppelkonsonanten", "question": "Welche Schreibweise ist richtig?", "options": ["komen", "kommen", "kohmen", "komenn"], "answer": 1, "skill": "D85", "difficulty": 1, "explanation": "Nach dem kurzen o steht mm: kommen."}, {"id": "NDE007", "domain": "Deutsch", "title": "Doppelkonsonanten", "question": "In welchem Wort steht ein Doppelkonsonant?", "options": ["Mutter", "Hase", "Ofen", "Blume"], "answer": 0, "skill": "D85", "difficulty": 1, "explanation": "Mutter enthält tt."}, {"id": "NDE008", "domain": "Deutsch", "title": "ss oder ß", "question": "Welche Schreibweise ist richtig?", "options": ["Straße", "Strasse", "Strase", "Straaße"], "answer": 0, "skill": "D87", "difficulty": 2, "explanation": "Nach langem Vokal steht hier ß: Straße."}, {"id": "NDE009", "domain": "Deutsch", "title": "ie oder i", "question": "Welches Wort wird mit „ie“ geschrieben?", "options": ["spielen", "Kint", "mitten", "Fisch"], "answer": 0, "skill": "D86", "difficulty": 1, "explanation": "spielen enthält langes i, geschrieben ie."}, {"id": "NDE010", "domain": "Deutsch", "title": "Nebensatz", "question": "Welcher Satz ist richtig?", "options": ["Ich bleibe zu Hause, weil ich müde bin.", "Ich bleibe zu Hause, weil ich bin müde.", "Weil ich müde, ich bin zu Hause.", "Ich weil müde bin bleibe zu Hause."], "answer": 0, "skill": "D75", "difficulty": 2, "explanation": "Im weil-Satz steht das konjugierte Verb am Ende."}, {"id": "NDE011", "domain": "Deutsch", "title": "Subjekt", "question": "Was ist das Subjekt? „Der kleine Hund jagt den Ball.“", "options": ["Der kleine Hund", "jagt", "den Ball", "kleine"], "answer": 0, "skill": "D70", "difficulty": 1, "explanation": "Wer jagt? Der kleine Hund."}, {"id": "NDE012", "domain": "Deutsch", "title": "Prädikat", "question": "Was ist das Prädikat? „Die Kinder lesen ein spannendes Buch.“", "options": ["Die Kinder", "lesen", "ein spannendes Buch", "spannendes"], "answer": 1, "skill": "D71", "difficulty": 1, "explanation": "lesen ist das konjugierte Verb."}, {"id": "NDE013", "domain": "Deutsch", "title": "Perfekt", "question": "Welcher Satz steht im Perfekt?", "options": ["Ich spiele Tennis.", "Ich spielte Tennis.", "Ich habe Tennis gespielt.", "Ich werde Tennis spielen."], "answer": 2, "skill": "D63", "difficulty": 2, "explanation": "Perfekt = haben/sein + Partizip II."}, {"id": "NDE014", "domain": "Deutsch", "title": "Präteritum", "question": "Welche Form ist Präteritum von „gehen“?", "options": ["geht", "ging", "gegangen", "gehen"], "answer": 1, "skill": "D62", "difficulty": 2, "explanation": "gehen → ging."}, {"id": "NDE015", "domain": "Deutsch", "title": "Schulwortschatz", "question": "Was bedeutet „Unterstreiche das passende Wort.“?", "options": ["Souligne le mot qui convient.", "Écris une histoire.", "Lis à haute voix.", "Dessine le mot."], "answer": 0, "skill": "D14", "difficulty": 1, "explanation": "unterstreichen = souligner."}, {"id": "NDE016", "domain": "Deutsch", "title": "Schulwortschatz", "question": "Was bedeutet „Ordne die Aussagen.“?", "options": ["Classe les affirmations dans l’ordre.", "Efface les affirmations.", "Traduis les affirmations.", "Invente des affirmations."], "answer": 0, "skill": "D14", "difficulty": 1, "explanation": "ordnen = mettre en ordre / classer."}, {"id": "NDE017", "domain": "Deutsch", "title": "Lesen – Schlussfolgern", "question": "Mara stellt ihren Wecker auf 6:45 Uhr. Der Bus fährt um 7:35 Uhr. Sie braucht 20 Minuten zum Frühstücken und 15 Minuten bis zur Haltestelle. Warum steht sie nicht erst um 7:20 Uhr auf?", "options": ["Dann hätte sie nicht genug Zeit für Frühstück und Weg.", "Der Bus fährt um 6:45 Uhr.", "Sie möchte nachts frühstücken.", "Die Haltestelle ist geschlossen."], "answer": 0, "skill": "D10", "difficulty": 2, "explanation": "Man muss die Zeiten verknüpfen."}, {"id": "NDE018", "domain": "Deutsch", "title": "Lesen – Hauptaussage", "question": "Bäume kühlen Städte, bieten Tieren Lebensraum und filtern Staub aus der Luft. Deshalb pflanzen viele Städte neue Bäume. Was ist die Hauptaussage?", "options": ["Stadtbäume haben mehrere wichtige Funktionen.", "Alle Bäume wachsen gleich schnell.", "Staub ist für Bäume Nahrung.", "Städte brauchen keine Parks."], "answer": 0, "skill": "D09", "difficulty": 1, "explanation": "Die drei genannten Vorteile führen zur Hauptaussage."}, {"id": "NDE019", "domain": "Deutsch", "title": "Konnektoren", "question": "Welcher Konnektor passt? „Es regnet stark, ___ nehmen wir einen Schirm.“", "options": ["deshalb", "obwohl", "dass", "oder"], "answer": 0, "skill": "D76", "difficulty": 2, "explanation": "deshalb drückt eine Folge aus."}, {"id": "NDE020", "domain": "Deutsch", "title": "Adjektivsteigerung", "question": "Welche Form ist der Superlativ?", "options": ["schnell", "schneller", "am schnellsten", "schnelle"], "answer": 2, "skill": "D60", "difficulty": 1, "explanation": "schnell → schneller → am schnellsten."}, {"id": "NMA001", "domain": "Mathematik", "title": "Zahlen & Operationen", "question": "Welche Zahl ist um 375 größer als 4 625?", "options": ["4 900", "5 000", "5 100", "4 250"], "answer": 1, "skill": "M16", "difficulty": 1, "explanation": "4625 + 375 = 5000."}, {"id": "NMA002", "domain": "Mathematik", "title": "Multiplikation", "question": "48 · 7 = ?", "options": ["326", "336", "346", "356"], "answer": 1, "skill": "M21", "difficulty": 1, "explanation": "48×7=336."}, {"id": "NMA003", "domain": "Mathematik", "title": "Division", "question": "864 : 8 = ?", "options": ["98", "108", "118", "128"], "answer": 1, "skill": "M23", "difficulty": 1, "explanation": "864÷8=108."}, {"id": "NMA004", "domain": "Mathematik", "title": "Sachaufgabe", "question": "Eine Trainingsgruppe hat 6 Körbe mit jeweils 24 Bällen. 17 Bälle werden benutzt. Wie viele bleiben in den Körben?", "options": ["127", "137", "144", "161"], "answer": 0, "skill": "M31", "difficulty": 2, "explanation": "6×24=144; 144−17=127."}, {"id": "NMA005", "domain": "Mathematik", "title": "Brüche", "question": "Welche Zahl entspricht 3/4 von 20?", "options": ["5", "10", "15", "16"], "answer": 2, "skill": "M40", "difficulty": 2, "explanation": "20÷4=5, 5×3=15."}, {"id": "NMA006", "domain": "Mathematik", "title": "Größen", "question": "2 m 35 cm entsprechen ...", "options": ["235 cm", "2 035 cm", "205 cm", "250 cm"], "answer": 0, "skill": "M43", "difficulty": 1, "explanation": "2 m = 200 cm; +35=235 cm."}, {"id": "NMA007", "domain": "Mathematik", "title": "Zeit", "question": "Ein Training beginnt um 16:25 Uhr und dauert 1 h 35 min. Wann endet es?", "options": ["17:50", "18:00", "18:10", "18:20"], "answer": 1, "skill": "M45", "difficulty": 2, "explanation": "16:25 + 1:35 = 18:00."}, {"id": "NMA008", "domain": "Mathematik", "title": "Geld", "question": "Ein Buch kostet 12,80 € und ein Heft 3,45 €. Wie viel kosten beide zusammen?", "options": ["15,25 €", "16,25 €", "16,35 €", "17,25 €"], "answer": 1, "skill": "M47", "difficulty": 1, "explanation": "12,80+3,45=16,25."}, {"id": "NMA009", "domain": "Mathematik", "title": "Geometrie", "question": "Ein Rechteck ist 8 cm lang und 5 cm breit. Wie groß ist sein Umfang?", "options": ["13 cm", "26 cm", "40 cm", "16 cm"], "answer": 1, "skill": "M52", "difficulty": 2, "explanation": "2×(8+5)=26 cm."}, {"id": "NMA010", "domain": "Mathematik", "title": "Fläche", "question": "Ein Rechteck ist 9 cm lang und 4 cm breit. Wie groß ist seine Fläche?", "options": ["13 cm²", "26 cm²", "36 cm²", "45 cm²"], "answer": 2, "skill": "M53", "difficulty": 2, "explanation": "9×4=36 cm²."}, {"id": "NMA011", "domain": "Mathematik", "title": "Daten", "question": "Alicia trainiert Mo 60 min, Di 90 min, Mi 60 min, Do 90 min. Wie viele Minuten insgesamt?", "options": ["240", "270", "300", "330"], "answer": 2, "skill": "M55", "difficulty": 1, "explanation": "60+90+60+90=300."}, {"id": "NMA012", "domain": "Mathematik", "title": "Wahrscheinlichkeit", "question": "In einer Tasche liegen 3 rote und 1 blauer Ball. Welche Farbe ist wahrscheinlicher?", "options": ["Blau", "Rot", "gleich wahrscheinlich", "unmöglich zu sagen"], "answer": 1, "skill": "M58", "difficulty": 1, "explanation": "3 von 4 sind rot."}, {"id": "NMA013", "domain": "Mathematik", "title": "Teilbarkeit", "question": "Welche Zahl ist durch 3 und durch 5 teilbar?", "options": ["45", "52", "63", "82"], "answer": 0, "skill": "M62", "difficulty": 2, "explanation": "45 ist durch 3 und 5 teilbar."}, {"id": "NMA014", "domain": "Mathematik", "title": "Primzahlen", "question": "Welche Zahl ist eine Primzahl?", "options": ["27", "31", "39", "51"], "answer": 1, "skill": "M64", "difficulty": 2, "explanation": "31 hat nur die Teiler 1 und 31."}, {"id": "NMA015", "domain": "Mathematik", "title": "Negative Zahlen", "question": "Welche Zahl liegt am weitesten links auf der Zahlengeraden?", "options": ["−7", "−2", "0", "5"], "answer": 0, "skill": "M66", "difficulty": 2, "explanation": "−7 ist die kleinste Zahl."}, {"id": "NMA016", "domain": "Mathematik", "title": "Runden", "question": "Runde 7 648 auf Hunderter.", "options": ["7 600", "7 650", "7 700", "8 000"], "answer": 0, "skill": "M18", "difficulty": 1, "explanation": "48<50, daher 7600."}, {"id": "NMA017", "domain": "Mathematik", "title": "Sachaufgabe", "question": "Ein Zug fährt 185 km am Vormittag und 238 km am Nachmittag. Wie viele Kilometer insgesamt?", "options": ["413", "423", "433", "443"], "answer": 1, "skill": "M31", "difficulty": 1, "explanation": "185+238=423."}, {"id": "NMA018", "domain": "Mathematik", "title": "Brüche vergleichen", "question": "Welcher Bruch ist größer?", "options": ["1/2", "3/4", "gleich groß", "nicht vergleichbar"], "answer": 1, "skill": "M41", "difficulty": 2, "explanation": "3/4=0,75; 1/2=0,5."}, {"id": "NLO001", "domain": "Logik", "title": "Zahlenfolge", "question": "Welche Zahl folgt? 5, 10, 20, 40, ...", "options": ["45", "50", "60", "80"], "answer": 3, "skill": "L01", "difficulty": 1, "explanation": "Jede Zahl wird verdoppelt."}, {"id": "NLO002", "domain": "Logik", "title": "Zahlenfolge", "question": "Welche Zahl folgt? 2, 5, 9, 14, 20, ...", "options": ["25", "26", "27", "28"], "answer": 2, "skill": "L01", "difficulty": 2, "explanation": "+3,+4,+5,+6, dann +7."}, {"id": "NLO003", "domain": "Logik", "title": "Analogie", "question": "Auge : sehen = Ohr : ...", "options": ["sprechen", "hören", "laufen", "riechen"], "answer": 1, "skill": "L03", "difficulty": 1, "explanation": "Mit dem Ohr hört man."}, {"id": "NLO004", "domain": "Logik", "title": "Kategorie", "question": "Was passt nicht? Apfel – Birne – Karotte – Pflaume", "options": ["Apfel", "Birne", "Karotte", "Pflaume"], "answer": 2, "skill": "L05", "difficulty": 1, "explanation": "Karotte ist Gemüse, die anderen sind Obst."}, {"id": "NLO005", "domain": "Logik", "title": "Schlussfolgern", "question": "Alle Tiras können fliegen. Lumo ist ein Tira. Was muss stimmen?", "options": ["Lumo kann fliegen.", "Lumo ist blau.", "Lumo ist klein.", "Lumo kann schwimmen."], "answer": 0, "skill": "L09", "difficulty": 1, "explanation": "Die Aussage folgt direkt aus den Prämissen."}, {"id": "NLO006", "domain": "Logik", "title": "Reihenfolge", "question": "Nina ist vor Zoe. Zoe ist vor Lea. Wer ist in der Mitte?", "options": ["Nina", "Zoe", "Lea", "nicht bestimmbar"], "answer": 1, "skill": "L14", "difficulty": 1, "explanation": "Nina – Zoe – Lea."}, {"id": "NLO007", "domain": "Logik", "title": "Kalenderlogik", "question": "Heute ist Freitag. Welcher Tag ist in 10 Tagen?", "options": ["Sonntag", "Montag", "Dienstag", "Mittwoch"], "answer": 1, "skill": "L10", "difficulty": 2, "explanation": "10 Tage = 7+3; Freitag+3=Montag."}, {"id": "NLO008", "domain": "Logik", "title": "Muster", "question": "Welche Zahl fehlt? 4, 8, 12, __, 20", "options": ["14", "15", "16", "18"], "answer": 2, "skill": "L12", "difficulty": 1, "explanation": "+4."}, {"id": "NLO009", "domain": "Logik", "title": "Ausschließen", "question": "Welche Aussage kann stimmen?", "options": ["Ein Quadrat hat drei Ecken.", "Ein roter Ball ist rund.", "Eine Woche hat zehn Tage.", "5 ist größer als 20."], "answer": 1, "skill": "L10", "difficulty": 1, "explanation": "Ein Ball kann rot und rund sein."}, {"id": "NLO010", "domain": "Logik", "title": "Zahlenfolge", "question": "Welche Zahl folgt? 81, 27, 9, 3, ...", "options": ["0", "1", "2", "6"], "answer": 1, "skill": "L01", "difficulty": 2, "explanation": "Immer durch 3 teilen."}, {"id": "NLO011", "domain": "Logik", "title": "Analogie", "question": "Winter : kalt = Sommer : ...", "options": ["heiß", "dunkel", "Schnee", "kurz"], "answer": 0, "skill": "L03", "difficulty": 1, "explanation": "Typische Temperaturbeziehung."}, {"id": "NLO012", "domain": "Logik", "title": "Bedingungen", "question": "Mia darf nur spielen, wenn die Hausaufgaben fertig sind. Mia spielt. Was folgt?", "options": ["Die Hausaufgaben sind fertig.", "Mia hat keine Hausaufgaben.", "Es ist Wochenende.", "Mia spielt Tennis."], "answer": 0, "skill": "L09", "difficulty": 2, "explanation": "Die Bedingung muss erfüllt sein."}, {"id": "NLO013", "domain": "Logik", "title": "Reihenfolge", "question": "A ist kleiner als B. C ist größer als B. Welche Reihenfolge ist richtig?", "options": ["A < B < C", "C < B < A", "B < A < C", "A < C < B"], "answer": 0, "skill": "L14", "difficulty": 2, "explanation": "Aus beiden Aussagen folgt A<B<C."}, {"id": "NLO014", "domain": "Logik", "title": "Muster", "question": "Welche Form folgt? Kreis, Quadrat, Kreis, Quadrat, ...", "options": ["Dreieck", "Kreis", "Stern", "Rechteck"], "answer": 1, "skill": "L12", "difficulty": 1, "explanation": "Das Muster wechselt Kreis/Quadrat."}];
+NEW_EXERCISES_V1016.forEach(e=>{ if(!EXERCISES.some(x=>x.id===e.id)) EXERCISES.push(e); });
+
+// --- Expand vocabulary themes without leaving the matrix architecture ---
+const EXTRA_VOCAB_V1016 = {
+  school:[
+    ['die Überschrift','le titre','Welche Überschrift passt zum Text?'],
+    ['die Aussage','l’affirmation','Welche Aussage ist richtig?'],
+    ['begründen','justifier','Begründe deine Antwort mit einem Satz.'],
+    ['ergänzen','compléter','Ergänze den fehlenden Satz.'],
+    ['zuordnen','associer','Ordne die Begriffe den Bildern zu.']
+  ],
+  math:[
+    ['der Umfang','le périmètre','Berechne den Umfang des Rechtecks.'],
+    ['die Fläche','l’aire','Die Fläche beträgt 36 Quadratzentimeter.'],
+    ['der Bruch','la fraction','Drei Viertel ist ein Bruch.'],
+    ['teilbar','divisible','45 ist durch 5 teilbar.'],
+    ['runden','arrondir','Runde die Zahl auf Hunderter.']
+  ],
+  nature:[
+    ['die Luftfeuchtigkeit','l’humidité de l’air','Hohe Luftfeuchtigkeit kann Gewitter begünstigen.'],
+    ['verdunsten','s’évaporer','Wasser kann bei Wärme verdunsten.'],
+    ['der Lebensraum','l’habitat','Der Wald ist ein Lebensraum für viele Tiere.'],
+    ['die Nahrung','la nourriture','Insekten finden Nahrung an Blüten.'],
+    ['die Ursache','la cause','Wir suchen die Ursache des Phänomens.']
+  ],
+  sport:[
+    ['die Reaktion','la réaction','Eine schnelle Reaktion ist im Tennis wichtig.'],
+    ['der Punktestand','le score','Der Punktestand ist 30:15.'],
+    ['sich erholen','récupérer','Nach dem Training muss ich mich erholen.'],
+    ['die Koordination','la coordination','Koordination hilft bei schnellen Bewegungen.'],
+    ['die Konzentration','la concentration','Im Tiebreak brauche ich Konzentration.']
+  ],
+  city:[
+    ['die Kreuzung','le carrefour','An der Kreuzung biegen wir links ab.'],
+    ['die Richtung','la direction','Welche Richtung ist richtig?'],
+    ['die Entfernung','la distance','Die Entfernung beträgt zwei Kilometer.'],
+    ['überqueren','traverser','Wir überqueren die Straße an der Ampel.'],
+    ['der Fahrplan','l’horaire','Im Fahrplan steht die Abfahrtszeit.']
+  ]
+};
+function addExtraThemeWordsV1016(){
+  VOCAB_THEMES_V10.forEach(t=>{
+    const key=String(t.id||'').toLowerCase();
+    let extras=[];
+    if(key.includes('schul'))extras=EXTRA_VOCAB_V1016.school;
+    else if(key.includes('mathe'))extras=EXTRA_VOCAB_V1016.math;
+    else if(key.includes('natur')||key.includes('umwelt'))extras=EXTRA_VOCAB_V1016.nature;
+    else if(key.includes('sport')||key.includes('freizeit'))extras=EXTRA_VOCAB_V1016.sport;
+    else if(key.includes('stadt')||key.includes('verkehr'))extras=EXTRA_VOCAB_V1016.city;
+    extras.forEach((w,i)=>{
+      if(!t.words.some(x=>x[0]===w[0])) t.words.push(w);
+    });
+  });
+}
+addExtraThemeWordsV1016();
+
+// --- Daily questions: avoid yesterday and recent days ---
+function recentDailyIdsV1016(days=7){
+  const out=new Set(), now=new Date();
+  for(let i=1;i<=days;i++){
+    const d=new Date(now); d.setDate(now.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    (state.v1016.dailyQuestionIds[k]||[]).forEach(id=>out.add(id));
+  }
+  return out;
+}
+function freshPackV1016(skill,n=8){
+  const recent=recentDailyIdsV1016(7);
+  let pool=EXERCISES.filter(e=>e.skill===skill && !recent.has(e.id));
+  if(pool.length<n){
+    pool=pool.concat(EXERCISES.filter(e=>e.skill===skill && !pool.some(p=>p.id===e.id)));
+  }
+  // add generated alternatives when the skill bank is small
+  while(pool.length<n){
+    let e=skill&&skill[0]==='M'?genMath():skill&&skill[0]==='L'?genLogicV10(skill):genDeutsch();
+    if(e){ e.id='FRESH_'+skill+'_'+Date.now()+'_'+pool.length+'_'+Math.floor(Math.random()*9999); e.skill=skill; pool.push(e); }
+    else break;
+  }
+  return shuffle(pool).slice(0,n);
+}
+function rememberDailyQuestionsV1016(pack){
+  const k=today();
+  state.v1016.dailyQuestionIds[k]=state.v1016.dailyQuestionIds[k]||[];
+  pack.forEach(e=>{if(e&&!state.v1016.dailyQuestionIds[k].includes(e.id))state.v1016.dailyQuestionIds[k].push(e.id);});
+  saveSilent();
+}
+
+// final daily-step launcher: fresh questions every day
+startDailyStep=function(id,action,skill,min){
+  state.currentDailyStep={id,action,skill,min,date:today()};
+  ensureV10Runner();
+  if(action && action.startsWith('diag:')){startT0DomainV10(action.split(':')[1]);return;}
+  if(action && action.startsWith('vocabtheme:')){const tid=action.split(':')[1];showScreen('vocab');setTimeout(()=>startThemeLearnV10(tid),40);return;}
+  if(skill){
+    const pack=freshPackV1016(skill,8);
+    rememberDailyQuestionsV1016(pack);
+    showScreen('runner');
+    document.getElementById('v10RunnerTitle').textContent='🎯 '+(COMPETENCES.find(c=>c.id===skill)?.label||'Tagestraining');
+    document.getElementById('v10RunnerSub').textContent=`Tagesplan · ${min} Minuten · neue Fragen des Tages`;
+    startSession(pack,'v10Exercise','training');
+    return;
+  }
+  if(action==='logik'){startLogicPackV10(null,12);return;}
+  showScreen(action||'home');
+};
+
+// --- Unified real-time accounting for ALL meaningful work ---
+const WORK_SCREENS_V1016=new Set(['todayplan','daily','lessons','vocab','writing','dictation','freeanswer','longreading','longseries','bank','deutsch','mathe','logik','boss','testcenter','t0','t0tests','startklar','books','projects','runner','resources']);
+function activitySourceV1016(screenId){
+  const map={vocab:'Wortschatz',writing:'Schreiben',dictation:'Diktat',freeanswer:'Freie Antworten',longreading:'Lese-Marathon',longseries:'Serien',bank:'Aufgabenbank',mathe:'Mathematik',deutsch:'Deutsch',logik:'Logik',boss:'Boss Tests',t0tests:'T0 Test Center',testcenter:'Potenzialtest',projects:'Projekte',books:'Romane',resources:'Ressourcen',runner:'Training'};
+  return map[screenId]||'Training';
+}
+function addSecondsGlobalV1016(seconds,source){
+  if(!seconds||seconds<20)return;
+  const mins=Math.max(1,Math.round(seconds/60)),k=today();
+  state.dailyPath.activityMinutes[k]=(state.dailyPath.activityMinutes[k]||0)+mins;
+  state.v1016.activityBySource[k]=state.v1016.activityBySource[k]||{};
+  state.v1016.activityBySource[k][source]=(state.v1016.activityBySource[k][source]||0)+mins;
+}
+function flushScreenTimerV1016(){
+  const t=state.v1016.screenTimer;
+  if(!t)return;
+  // Session time is counted at pause/finish; only count non-session activity here.
+  if(t.countable && !t.hadSession){
+    addSecondsGlobalV1016((Date.now()-t.start)/1000,t.source);
+  }
+  state.v1016.screenTimer=null;
+}
+const showScreenV1016Base=showScreen;
+showScreen=function(id){
+  flushScreenTimerV1016();
+  showScreenV1016Base(id);
+  state.v1016.screenTimer={screen:id,start:Date.now(),source:activitySourceV1016(id),countable:WORK_SCREENS_V1016.has(id),hadSession:!!state.session};
+  if(id==='home')setTimeout(renderProgramProgressV1016,40);
+  if(id==='todayplan')setTimeout(()=>{renderStructuredDaily();renderProgramProgressV1016();},40);
+};
+
+// Count EVERY completed session, not only Test Center.
+const finishSessionV1016Base=finishSession;
+finishSession=function(){
+  if(!state.session)return;
+  const s=state.session,sec=secondsWorkedV1015(s);
+  const key='all|'+(s.startTs||'nostart')+'|'+(s.boxId||'box')+'|'+(s.kind||'kind');
+  state.v1016.countedSessions=state.v1016.countedSessions||{};
+  if(sec&&!state.v1016.countedSessions[key]){
+    addSecondsGlobalV1016(sec, activitySourceV1016((document.querySelector('.screen.active')||{}).id||'runner'));
+    state.v1016.countedSessions[key]=true;
+  }
+  finishSessionV1016Base();
+  renderStructuredDaily();
+  renderProgramProgressV1016();
+  save();
+};
+
+// Prevent old test-only counter from double-counting V10.16 sessions.
+isTestCenterSessionV1015=function(){return false;};
+
+// pause/abandon uses the V10.16 unified counter
+addWorkedMinutesV1015=function(seconds,source='training'){
+  addSecondsGlobalV1016(seconds,source);
+};
+
+// Daily total now equals actual work only.
+v1014TodayWorkedMinutes=function(){
+  return Math.max(0,Number(state.dailyPath.activityMinutes[today()]||0));
+};
+
+// --- 60-minute celebration ---
+function celebrateDayV1016(){
+  const k=today();
+  if(state.v1016.celebratedDays[k])return;
+  state.v1016.celebratedDays[k]=true;
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(5,8,25,.88);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML=`<div class="card" style="max-width:680px;text-align:center;border:2px solid #ffd54a"><div style="font-size:70px">🏆🔥⭐🎾🚀</div><h1>Mission des Tages geschafft!</h1><p style="font-size:20px">60 Minuten erreicht. Starke Arbeit, Alicia!</p><div style="font-size:42px">✨ 🎖️ ✨</div><button class="btn gold" onclick="this.closest('div[style*=fixed]').remove()">Weiter 🚀</button></div>`;
+  document.body.appendChild(overlay);
+  if(typeof speakGermanCleanV106==='function')speakGermanCleanV106('Großartig, Alicia! Du hast deine Tagesmission geschafft. Sechzig Minuten Training. Weiter so!');
+  save();
+}
+
+// Override daily render with actual minutes, celebration, bonus work display and progress graph.
+const renderStructuredDailyV1016Base=renderStructuredDaily;
+renderStructuredDaily=function(){
+  renderStructuredDailyV1016Base();
+  const ds=getDailyState(),mins=v1014TodayWorkedMinutes();
+  ds.minutes=mins;
+  if(mins>=60&&!ds.validated){
+    ds.validated=true;state.dailyPath.validatedDays++;state.xp+=500;state.dailyPath.dayBonuses++;ds.bonus=true;
+  }
+  document.getElementById('todayMinutes').textContent=mins;
+  document.getElementById('todayProgressBar').style.width=Math.min(100,mins/60*100)+'%';
+  document.getElementById('todayValidation').textContent=mins>=60
+    ?`✅ Tag validiert · ${mins} Minuten insgesamt · Bonus-Arbeit zählt weiter!`
+    :`Noch ${60-mins} Minuten bis zur Tagesvalidierung`;
+  if(mins>=60) setTimeout(celebrateDayV1016,100);
+  renderProgramProgressV1016();
+  saveSilent();
+};
+
+// --- Program progress graph to September 2027 ---
+const PROGRAM_TARGET_MINUTES_V1016=600*60;
+function totalWorkedMinutesV1016(){
+  return Object.values(state.dailyPath.activityMinutes||{}).reduce((a,b)=>a+Number(b||0),0);
+}
+function renderProgramProgressV1016(){
+  const total=totalWorkedMinutesV1016(),pct=Math.min(100,100*total/PROGRAM_TARGET_MINUTES_V1016);
+  let box=document.getElementById('programProgressV1016');
+  if(!box){
+    box=document.createElement('div');box.id='programProgressV1016';box.className='card';box.style.margin='16px 0';
+    const host=document.querySelector('#todayplan .screen-inner')||document.getElementById('todayplan')||document.getElementById('home');
+    if(host)host.appendChild(box);
+  }
+  const dates=Object.keys(state.dailyPath.activityMinutes||{}).sort().slice(-14);
+  const bars=dates.map(d=>{const m=Number(state.dailyPath.activityMinutes[d]||0);return `<div style="flex:1;min-width:18px;text-align:center"><div title="${d} · ${m} min" style="height:${Math.min(100,Math.max(4,m/1.5))}px;background:linear-gradient(#8b5cf6,#22d3ee);border-radius:5px 5px 2px 2px"></div><div class="tiny">${d.slice(5)}</div></div>`}).join('');
+  const hours=(total/60).toFixed(1),remaining=Math.max(0,600-total/60).toFixed(1);
+  box.innerHTML=`<h2>📈 Mission September 2027</h2>
+    <p><strong>${hours} h</strong> travaillées sur un parcours cible d’environ <strong>600 h</strong> · <strong>${pct.toFixed(2)}%</strong> du volume prévu.</p>
+    <div class="progress" style="height:18px"><div class="bar" style="width:${pct}%"></div></div>
+    <p class="muted">${total>=60?'Jeder volle Trainingstag bringt dich sichtbar näher ans Gymnasium.':'Jede Minute zählt. Heute weiter Schritt für Schritt!'} · Encore ≈ ${remaining} h sur le parcours cible.</p>
+    <div style="display:flex;align-items:end;gap:6px;height:130px;margin-top:14px">${bars||'<span class="muted">Noch keine Zeitdaten</span>'}</div>`;
+}
+
+// --- Daily league simulation: close competition, based on TODAY only ---
+function dailyXpV1016(){
+  const k=today();
+  if(state.v1016.dailyXpStart[k]===undefined)state.v1016.dailyXpStart[k]=state.xp;
+  return Math.max(0,state.xp-state.v1016.dailyXpStart[k]);
+}
+renderLeague=function(){
+  const mins=v1014TodayWorkedMinutes(),real=dailyXpV1016();
+  const seed=Number(today().replace(/-/g,''))%97;
+  const rivals=[
+    {name:'Mia',xp:980+(seed%90)},
+    {name:'Emma',xp:910+((seed*3)%100)},
+    {name:'Lena',xp:840+((seed*5)%100)},
+    {name:'Sophie',xp:760+((seed*7)%90)},
+    {name:'Clara',xp:700+((seed*11)%80)}
+  ];
+  // Alicia cannot appear #1 before completing the 60-minute mission.
+  const top=Math.max(...rivals.map(r=>r.xp));
+  const shown=mins>=60 ? Math.max(real,top+Math.min(250,Math.max(20,Math.round((mins-60)*4)))) : Math.min(real,top-30);
+  rivals.push({name:'Alicia',xp:shown});
+  rivals.sort((a,b)=>b.xp-a.xp);
+  const place=rivals.findIndex(x=>x.name==='Alicia')+1;
+  document.getElementById('leaguePlace').textContent='#'+place;
+  document.getElementById('leagueBar').style.width=Math.min(100,shown/(top+250)*100)+'%';
+  document.getElementById('leagueRows').innerHTML=rivals.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}${r.name==='Alicia'?' <span class="badge">DU · heute</span>':''}</td><td>${r.xp}</td></tr>`).join('');
+};
+
+// --- Longer ranking ladder through September 2027 ---
+updateStats=function(){
+  const attempts=state.history.length,correct=state.history.reduce((a,b)=>a+b.correct,0);
+  document.getElementById('statAttempts').textContent=attempts;
+  document.getElementById('statAccuracy').textContent=attempts?Math.round(100*correct/attempts)+'%':'0%';
+  document.getElementById('statXP').textContent=state.xp;
+  document.getElementById('statT0').textContent=state.t0Day+'/14';
+  const grouped={};state.history.forEach(h=>{grouped[h.date]=grouped[h.date]||[];grouped[h.date].push(h.correct)});
+  const days=Object.keys(grouped).sort().slice(-10);
+  document.getElementById('historyChart').innerHTML=days.length?days.map(d=>{const a=grouped[d],p=Math.round(100*a.reduce((x,y)=>x+y,0)/a.length);return `<div class="c" title="${d}: ${p}%" style="height:${Math.max(5,p)}%"></div>`}).join(''):'<span class="muted">Noch keine Daten</span>';
+
+  const levels=[
+   ['Starter',0,'🌱'],['Entdeckerin',1500,'🧭'],['Kämpferin',3500,'⚡'],['Bronze Scholar',6000,'🥉'],
+   ['Silver Scholar',9000,'🥈'],['Gold Scholar',13000,'🥇'],['Platin Denkerin',18000,'💎'],['Deutsch Profi I',24000,'🇩🇪'],
+   ['Deutsch Profi II',31000,'📚'],['Mathe Taktikerin',39000,'🔢'],['Logik Expertin',48000,'🧠'],['Gymnasium Rookie',58000,'🎓'],
+   ['Gymnasium Challenger',70000,'🏆'],['Gymnasium Star I',84000,'🌟'],['Gymnasium Star II',100000,'🌟'],['Elite Scholar',118000,'🔥'],
+   ['Potenzialtest Master',138000,'🎯'],['Klasse-6 Champion',160000,'🚀'],['Grand Master',185000,'👑'],['LEGEND',215000,'🏰']
+  ];
+  let idx=0;levels.forEach((l,i)=>{if(state.xp>=l[1])idx=i});
+  const cur=levels[idx],next=levels[Math.min(levels.length-1,idx+1)];
+  document.getElementById('v10Level').textContent=`${cur[2]} ${cur[0]}`;
+  const span=Math.max(1,next[1]-cur[1]),progress=idx===levels.length-1?100:Math.round(100*(state.xp-cur[1])/span);
+  document.getElementById('v10RewardBar').style.width=Math.max(0,Math.min(100,progress))+'%';
+  document.getElementById('v10NextReward').textContent=idx===levels.length-1?'LEGEND erreicht 👑':`${Math.max(0,next[1]-state.xp)} XP bis ${next[2]} ${next[0]}`;
+  document.getElementById('v10Medals').innerHTML=levels.slice(1).map(l=>`<div class="medal ${state.xp>=l[1]?'':'locked'}"><div class="ico">${l[2]}</div><strong>${l[0]}</strong><div class="tiny">${l[1]} XP</div></div>`).join('');
+  const d=['T0DE','T0MA','T0LO','T0MX'];
+  document.getElementById('v10DiagStats').innerHTML=d.map(id=>`<div class="quest"><span>${diagLabelV10(id)}</span><strong>${state.v10diag.done[id]?state.v10diag.scores[id]+'%':'—'}</strong></div>`).join('');
+  const weak=weakSkills(c=>c.priority==='P0',3),strong=COMPETENCES.filter(c=>scoreOf(c.id)!==null).sort((a,b)=>scoreOf(b.id)-scoreOf(a.id)).slice(0,3);
+  document.getElementById('v10Strengths').innerHTML=`<strong>🚀 Stärken</strong><br>${strong.length?strong.map(c=>`${c.label} · ${scoreOf(c.id)}%`).join('<br>'):'Noch keine Daten'}<hr style="border-color:#343d5d"><strong>🎯 Prioritäten</strong><br>${weak.map(c=>`${c.label} · ${scoreOf(c.id)===null?'non testé':scoreOf(c.id)+'%'}`).join('<br>')}`;
+};
+
+// --- More trophies: long runway to September 2027 ---
+[
+ {id:'xp7500',icon:'🥉',name:'7.500 XP',desc:'Bronze Scholar',rule:()=>state.xp>=7500},
+ {id:'xp15000',icon:'🥇',name:'15.000 XP',desc:'Gold Scholar',rule:()=>state.xp>=15000},
+ {id:'xp30000',icon:'💎',name:'30.000 XP',desc:'Platin Denkerin',rule:()=>state.xp>=30000},
+ {id:'xp60000',icon:'🎓',name:'60.000 XP',desc:'Gymnasium Rookie',rule:()=>state.xp>=60000},
+ {id:'xp100000',icon:'🌟',name:'100.000 XP',desc:'Gymnasium Star II',rule:()=>state.xp>=100000},
+ {id:'xp150000',icon:'🚀',name:'150.000 XP',desc:'Klasse-6 Champion',rule:()=>state.xp>=150000},
+ {id:'hour10',icon:'⏱️',name:'10 Stunden',desc:'10 echte Lernstunden',rule:()=>totalWorkedMinutesV1016()>=600},
+ {id:'hour25',icon:'⏱️',name:'25 Stunden',desc:'25 echte Lernstunden',rule:()=>totalWorkedMinutesV1016()>=1500},
+ {id:'hour50',icon:'🔥',name:'50 Stunden',desc:'50 echte Lernstunden',rule:()=>totalWorkedMinutesV1016()>=3000},
+ {id:'hour100',icon:'🏰',name:'100 Stunden',desc:'100 echte Lernstunden',rule:()=>totalWorkedMinutesV1016()>=6000},
+ {id:'days10',icon:'📅',name:'10 Tagesmissionen',desc:'10 Tage mit ≥60 Minuten',rule:()=>state.dailyPath.validatedDays>=10},
+ {id:'days30',icon:'📅',name:'30 Tagesmissionen',desc:'30 Tage mit ≥60 Minuten',rule:()=>state.dailyPath.validatedDays>=30},
+ {id:'days100',icon:'💯',name:'100 Tagesmissionen',desc:'100 starke Tage',rule:()=>state.dailyPath.validatedDays>=100},
+ {id:'master40',icon:'🎖️',name:'40 Meisterschaften',desc:'40 Kompetenzen auf ⭐',rule:()=>COMPETENCES.filter(c=>statusOf(c.id)==='⭐').length>=40},
+ {id:'master80',icon:'👑',name:'80 Meisterschaften',desc:'80 Kompetenzen auf ⭐',rule:()=>COMPETENCES.filter(c=>statusOf(c.id)==='⭐').length>=80}
+].forEach(t=>{if(!TROPHY_RULES.some(x=>x.id===t.id))TROPHY_RULES.push(t)});
+
+// --- Stronger full French joker: complete common German instructions and question patterns ---
+const fullTranslationV1016Base=typeof fullTranslationV1012==='function'?fullTranslationV1012:null;
+function translateQuestionFullV1016(e){
+  const q=String(e.question||'').trim();
+  const exact={
+   'Welches Wort ist ein Modalverb?':'Quel mot est un verbe modal ?',
+   'Welcher Satz ist richtig?':'Quelle phrase est correcte ?',
+   'Was ist im Wort „Vogelkäfig“ das Bestimmungswort?':'Dans le mot « Vogelkäfig », quel est le mot déterminant (Bestimmungswort) ?',
+   'Was ist im Wort „Fußballplatz“ das Grundwort?':'Dans le mot « Fußballplatz », quel est le mot de base (Grundwort) ?',
+   'Welche Schreibweise ist richtig?':'Quelle orthographe est correcte ?',
+   'In welchem Wort steht ein Doppelkonsonant?':'Dans quel mot y a-t-il une consonne double ?',
+   'Was ist das Subjekt? „Der kleine Hund jagt den Ball.“':'Quel est le sujet ? « Le petit chien poursuit la balle. »',
+   'Was ist das Prädikat? „Die Kinder lesen ein spannendes Buch.“':'Quel est le prédicat (verbe conjugué) ? « Les enfants lisent un livre passionnant. »'
+  };
+  if(exact[q])return exact[q];
+  let r=fullTranslationV1016Base?fullTranslationV1016Base(e):q;
+  // If the prior translation still contains common German instruction words, clean them.
+  r=String(r)
+   .replace(/Welche Zahl folgt\?/gi,'Quel nombre vient ensuite ?')
+   .replace(/Welche Zahl fehlt\?/gi,'Quel nombre manque ?')
+   .replace(/Welche Aussage stimmt\?/gi,'Quelle affirmation est correcte ?')
+   .replace(/Welche Aussage ist richtig\?/gi,'Quelle affirmation est correcte ?')
+   .replace(/Was bedeutet/gi,'Que signifie')
+   .replace(/Warum/gi,'Pourquoi')
+   .replace(/Welche Überschrift passt/gi,'Quel titre convient')
+   .replace(/Was geschieht zuerst/gi,'Que se passe-t-il en premier')
+   .replace(/Welcher Satz ist richtig/gi,'Quelle phrase est correcte')
+   .replace(/Welche Schreibweise ist richtig/gi,'Quelle orthographe est correcte')
+   .replace(/Welche Form/gi,'Quelle forme')
+   .replace(/Wie viele/gi,'Combien')
+   .replace(/Wie groß/gi,'Quelle est la valeur / taille')
+   .replace(/Wie viel/gi,'Combien')
+   .replace(/entsprechen/gi,'correspondent à')
+   .replace(/beträgt/gi,'est de');
+  return r;
+}
+fullTranslationV1012=function(e){return translateQuestionFullV1016(e);};
+
+// Initialise new daily XP baseline and graph.
+if(state.v1016.dailyXpStart[today()]===undefined)state.v1016.dailyXpStart[today()]=state.xp;
+setTimeout(()=>{renderProgramProgressV1016();renderLeague();updateStats();},400);
 
 updateAll();
 </script>
