@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Alicia Gymnasium Quest – V10.19</title>
-<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1019.png?v=1019">
-<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1019.png?v=1019">
-<link rel="manifest" href="manifest-v1019.webmanifest?v=1019">
+<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1020.png?v=1019">
+<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1020.png?v=1020">
+<link rel="manifest" href="manifest-v1020.webmanifest?v=1019">
 <meta name="theme-color" content="#0d1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -198,13 +198,13 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <meta name="apple-mobile-web-app-title" content="Alicia Gymnasium Quest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Alicia Gymnasium Quest">
-<meta property="og:image" content="alicia-gymnasium-icon-v1019.png?v=1019">
+<meta property="og:image" content="alicia-gymnasium-icon-v1020.png?v=1020">
 
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.19 · SIMPLE MENU + WOCHEN-CHECK</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.20 · PROGRESSIVE TAGESPLAN</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -5018,7 +5018,7 @@ if(state.v1016.dailyXpStart[today()]===undefined)state.v1016.dailyXpStart[today(
 setTimeout(()=>{renderProgramProgressV1016();renderLeague();updateStats();},400);
 
 
-// ================= V10.19 · SIMPLE MENU + WOCHEN-CHECK =================
+// ================= V10.20 · PROGRESSIVE TAGESPLAN =================
 state.v1017=state.v1017||{pflichtBaselineActual:{},extraXpAwarded:{}};
 
 function plannedCompletedMinutesV1017(){
@@ -5173,9 +5173,12 @@ const V1019_GROUPS=[
 function renderSimpleNavV1019(){const nav=document.getElementById('nav');if(!nav)return;nav.innerHTML=V1019_GROUPS.map(g=>`<div class="v1019-nav-group ${g.open?'open':''}" data-group="${g.id}"><button class="v1019-nav-head" onclick="toggleV1019Group('${g.id}')">${g.icon} ${g.title}</button><div class="v1019-help">${g.help}</div><div class="v1019-nav-items">${g.items.map(p=>`<button data-page="${p[0]}" onclick="showScreen('${p[0]}')">${p[1]} ${p[2]}</button>`).join('')}</div></div>`).join('');}
 function toggleV1019Group(id){document.querySelectorAll('.v1019-nav-group').forEach(g=>{if(g.dataset.group===id)g.classList.toggle('open');});}
 
-function diagnosticDoneV1019(){const t=state.t0TestResults||state.testResults||{};return (state.t0Day&&state.t0Day>1)||Object.keys(t).length>0||(state.completedExercises||[]).length>=20;}
-function decorateHomeV1019(){const home=document.getElementById('home');if(!home)return;let box=document.getElementById('v1019StartGuide');if(!box){box=document.createElement('div');box.id='v1019StartGuide';box.className='card full v1019-primary';const grid=home.querySelector('.grid');if(grid)grid.prepend(box);}box.innerHTML=diagnosticDoneV1019()?`<h2>✅ Étape 1 terminée : diagnostic de départ</h2><p>Le T0 ne se refait pas chaque jour. Maintenant, la mission principale est <strong>Mein Tagesplan</strong>.</p><button class="btn green" onclick="showScreen('todayplan')">▶ Mein Tagesplan starten</button>`:`<h2>🏁 Étape 1 : diagnostic de départ</h2><p>À faire une seule fois pour connaître le niveau de départ.</p><button class="btn" onclick="showScreen('t0tests')">Diagnostic starten</button>`;}
-
+function diagnosticDoneV1019(){return true;}
+function decorateHomeV1019(){
+ const old=document.getElementById('v1019StartGuide');
+ if(old) old.remove();
+ /* Diagnostic T0 déjà réalisé : volontairement absent de la Home. */
+}
 function isoWeekKeyV1019(d=new Date()){const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const y=new Date(Date.UTC(x.getUTCFullYear(),0,1));const w=Math.ceil((((x-y)/86400000)+1)/7);return x.getUTCFullYear()+'-W'+String(w).padStart(2,'0');}
 function weeklyCheckDueV1019(){const key=isoWeekKeyV1019();if(state.v1019.weeklyChecks[key])return false;const days=Number(state.dailyPath.validatedDays||0);return days>0&&days%7===6;}
 function ensureWeeklyScreenV1019(){if(document.getElementById('weeklycheck'))return;const sec=document.createElement('section');sec.id='weeklycheck';sec.className='screen';sec.innerHTML=`<h1>🧪 Wochen-Check</h1><p class="muted">Une fois par semaine : mesurer les progrès, puis travailler précisément ce qui reste fragile.</p><div class="card v1019-week"><span class="badge gold">1× PRO WOCHE</span><h2 style="margin-top:10px">20 Fragen · Deutsch + Mathematik + Logik</h2><p>≈ 20 minutes d’évaluation avec des questions variées, puis ≈ 40 minutes de travail ciblé sur les faiblesses détectées.</p><div id="weeklyStatusV1019"></div><button class="btn gold" onclick="startWeeklyCheckV1019()">▶ Wochen-Check starten</button> <button class="btn secondary" onclick="startWeeklyWeaknessV1019()">🎯 40 min Schwächen-Training</button></div><div class="card exercise" id="weeklyExerciseV1019" style="display:none;margin-top:16px"></div><div class="card" style="margin-top:16px"><h2>📊 Verlauf</h2><div id="weeklyHistoryV1019"></div></div>`;const main=document.querySelector('main.main');if(main)main.appendChild(sec);}
@@ -5188,6 +5191,85 @@ const oldShowScreenV1019=showScreen;
 showScreen=function(id){oldShowScreenV1019(id);document.querySelectorAll('#nav [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='weeklycheck')renderWeeklyV1019();};
 ensureWeeklyScreenV1019();renderSimpleNavV1019();decorateHomeV1019();weeklyHomeBannerV1019();renderWeeklyV1019();
 setTimeout(()=>{renderStructuredDaily();renderSimpleNavV1019();decorateHomeV1019();weeklyHomeBannerV1019();renderWeeklyV1019();},500);
+</script>
+
+
+<style id="v1020-style">
+.v1020-mainstart{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.v1020-mainstart .btn{font-size:17px;padding:13px 18px}
+.v1020-program-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.v1020-program-card{background:#202640;border:1px solid #343d5f;border-radius:16px;padding:14px}.v1020-status{font-size:14px;font-weight:900;margin:7px 0}.v1020-parent-note{border-left:4px solid #8b5cf6;padding-left:12px}.v1020-simple-road{display:flex;gap:8px;flex-wrap:wrap}.v1020-simple-road span{padding:8px 10px;border-radius:999px;background:#27304e}.v1020-simple-road .now{background:#6d4bc3}.v1020-simple-road .done{background:#155e55}
+</style>
+<script id="v1020-patch">
+/* Alicia Gymnasium Quest V10.20 — Tagesplan first, curriculum-progressive engine. */
+state.v1020=state.v1020||{introduced:{},lastNewSkillDate:{},bonusXp:{}};
+
+function skillAttemptsV1020(id){return Number((state.skillStats[id]||{}).attempts||0)}
+function curriculumCandidatesV1020(prefix){
+ const ph=currentMonthPhase();
+ return COMPETENCES.filter(c=>c.id[0]===prefix && ((ph<=3&&(c.priority==='P0'||c.priority==='P1'))||(ph>=4&&(c.priority==='K5'||c.priority==='K6'||c.priority==='P0'||c.priority==='P1'))));
+}
+function newSkillV1020(prefix){const a=curriculumCandidatesV1020(prefix).filter(c=>skillAttemptsV1020(c.id)===0);return a[0]||null}
+function weakSkillV1020(prefix){return weakSkills(c=>c.id[0]===prefix && curriculumCandidatesV1020(prefix).some(x=>x.id===c.id),8).find(c=>skillAttemptsV1020(c.id)>0)||null}
+function secureSkillV1020(prefix){return curriculumCandidatesV1020(prefix).filter(c=>skillAttemptsV1020(c.id)>0&&scoreOf(c.id)>=80).sort((a,b)=>skillAttemptsV1020(a.id)-skillAttemptsV1020(b.id))[0]||null}
+function progressiveDailyTemplateV1020(){
+ const nd=newSkillV1020('D'),nm=newSkillV1020('M'),nl=newSkillV1020('L');
+ const wd=weakSkillV1020('D'),wm=weakSkillV1020('M'),wl=weakSkillV1020('L');
+ const rd=secureSkillV1020('D');
+ // Every normal day includes curriculum discovery + consolidation + spaced review + targeted weakness.
+ return [
+  {id:'newD',min:15,icon:'🌱',name:'Deutsch – Neues lernen',action:'deutsch',skill:(nd||wd)?.id||'D03',kind:'new'},
+  {id:'newM',min:15,icon:'🌱',name:'Mathematik – Neues lernen',action:'mathe',skill:(nm||wm)?.id||'M16',kind:'new'},
+  {id:'weak',min:12,icon:'🎯',name:'Schwachstelle verbessern',action:(wd?'deutsch':wm?'mathe':'logik'),skill:(wd||wm||wl||nl)?.id||'L01',kind:'weak'},
+  {id:'logic',min:10,icon:'🧠',name:'Logik – weiterkommen',action:'logik',skill:(nl||wl)?.id||'L01',kind:'new'},
+  {id:'review',min:8,icon:'🔁',name:'Wiederholung mit Abstand',action:rd?'deutsch':'vocab',skill:rd?.id||null,kind:'review'}
+ ];
+}
+dailyTemplate=progressiveDailyTemplateV1020;
+
+function statusLabelV1020(g){if(!g||!g.coverage)return 'Noch nicht bewertet';if(g.score>=85)return 'Sehr gut – '+g.score+' % richtig ⭐';if(g.score>=70)return 'Gut – '+g.score+' % richtig';return 'In Arbeit – '+g.score+' % richtig'}
+function decorateHomeV1020(){
+ const hero=document.querySelector('#home .hero');if(hero){hero.querySelector('.kpi-row').innerHTML='<span class="kpi">🎯 Potenzialtest – Vorbereitung: <strong id="potText">0%</strong></span><span class="kpi">📊 Lernweg getestet: <strong id="coverageText">0%</strong></span><span class="kpi">⭐ gemeistert: <strong id="masterText">0</strong></span>';let a=hero.querySelector('.v1020-mainstart');if(!a){a=document.createElement('div');a.className='v1020-mainstart';hero.appendChild(a)}a.innerHTML='<button class="btn gold" onclick="showScreen(\'todayplan\')">▶ MEIN TAGESPLAN STARTEN</button><button class="btn secondary" onclick="showScreen(\'bonusplay\')">⭐ Bonus-Missionen</button>';[...hero.querySelectorAll(':scope > div')].forEach(x=>{if(x!==a&&x.querySelector&&x.querySelector('button[onclick*="t0"],button[onclick*="daily"]'))x.remove()})}
+ const cards=[['Deutsch','🇩🇪 Deutsch'],['Math','🔢 Mathematik'],['Logic','🧠 Logik'],['K5','🎓 Klasse-5-Brücke']];cards.forEach(([id,label])=>{const el=document.getElementById('g'+id);if(el){const card=el.closest('.metric');if(card)card.querySelector('.muted').textContent=label}});
+ const q=document.getElementById('homeQuests')?.closest('.card');if(q){q.querySelector('h2').textContent='⭐ Bonus-Missionen · freiwillig';q.querySelector('#homeQuests').innerHTML='<p class="muted">Erst nach deinem 60-Minuten-Tagesplan. Wiederholen, spielen, XP sammeln.</p><button class="btn secondary" onclick="showScreen(\'bonusplay\')">Bonus öffnen</button>'}
+ const ca=document.getElementById('coachAnalysis')?.closest('.card');if(ca)ca.style.display='none';
+}
+
+const oldUpdateGaugesV1020=updateGauges;
+updateGauges=function(){oldUpdateGaugesV1020();const groups={Deutsch:groupStats(c=>c.id[0]==='D'&&(c.priority==='P0'||c.priority==='P1')),Math:groupStats(c=>c.id[0]==='M'&&(c.priority==='P0'||c.priority==='P1')),Logic:groupStats(c=>c.id[0]==='L'),K5:groupStats(c=>c.priority==='K5')};Object.entries(groups).forEach(([id,g])=>{const el=document.getElementById('g'+id),cov=document.getElementById('cov'+id),bar=document.getElementById('b'+id);if(el)el.textContent=statusLabelV1020(g);if(cov)cov.textContent=g.coverage+' % des Bereichs getestet';if(bar)bar.style.width=g.coverage+'%'});const p0=groupStats(c=>c.priority==='P0');const pot=document.getElementById('potText');if(pot)pot.textContent=p0.coverage+'%';};
+
+function renderProgramTrackerV1020(){
+ const host=document.getElementById('programTrackerV1020');if(!host)return;
+ const defs=[['Deutsch',c=>c.id[0]==='D'],['Mathematik',c=>c.id[0]==='M'],['Logik',c=>c.id[0]==='L'],['Klasse-5/6-Brücke',c=>c.priority==='K5'||c.priority==='K6']];
+ host.innerHTML='<div class="v1020-program-grid">'+defs.map(([n,f])=>{const all=COMPETENCES.filter(f),tested=all.filter(c=>skillAttemptsV1020(c.id)>0),secure=tested.filter(c=>scoreOf(c.id)>=85),working=tested.filter(c=>scoreOf(c.id)<85),todo=all.length-tested.length;return `<div class="v1020-program-card"><strong>${n}</strong><div class="v1020-status">${tested.length}/${all.length} Kompetenzen entdeckt</div><div class="progress"><div class="bar" style="width:${Math.round(100*tested.length/Math.max(1,all.length))}%"></div></div><p class="tiny">⭐ sicher: ${secure.length} · 🟠 in Arbeit: ${working.length} · 🌱 zu entdecken: ${todo}</p></div>`}).join('')+'</div><p class="muted v1020-parent-note">Der Tagesplan priorisiert neue Programmkompetenzen, festigt neue Inhalte, wiederholt ältere Inhalte mit Abstand und arbeitet gezielt an Schwächen. Bonus-Missionen dürfen stärker wiederholen.</p>';
+}
+function ensureProgramTrackerV1020(){
+ let sec=document.getElementById('programv1020');if(!sec){sec=document.createElement('section');sec.id='programv1020';sec.className='screen';sec.innerHTML='<h1>🧭 Mein Weg zum Gymnasium</h1><p class="muted">Hier siehst du, dass du jede Woche neue Dinge lernst und deinem Ziel näher kommst.</p><div class="v1020-simple-road"><span class="done">✓ Grundlagen</span><span class="now">→ Potenzialtest</span><span>Klasse 5</span><span>Klasse 6</span></div><div class="card" style="margin-top:16px"><h2>📚 Programm-Fortschritt</h2><div id="programTrackerV1020"></div></div>';document.querySelector('main.main').appendChild(sec)}renderProgramTrackerV1020();
+ const parents=document.getElementById('parents');if(parents&&!document.getElementById('parentProgramV1020')){const d=document.createElement('div');d.id='parentProgramV1020';d.className='card';d.style.marginTop='16px';d.innerHTML='<h2>🧭 Suivi du programme</h2><p>Le Tagesplan doit faire avancer le programme, pas seulement répéter les acquis.</p><button class="btn" onclick="showScreen(\'programv1020\')">Voir le suivi détaillé</button><div class="v1020-parent-note muted" style="margin-top:12px">Statuts : Nicht begonnen → In Arbeit → Gelernt → Getestet → Sicher. Les Wochen-Checks servent à vérifier la stabilité des acquis.</div>';parents.appendChild(d)}
+}
+
+function partialHintV1020(e){return partialHintV10(e)}
+function fullFrenchV1020(e){
+ const q=String(e.question||'').trim();
+ const special=[[/Ein Zug fährt\s*(\d+)\s*km am Vormittag und\s*(\d+)\s*km am Nachmittag\.?\s*Wie viele Kilometer insgesamt\??/i,(m)=>`Un train parcourt ${m[1]} km le matin et ${m[2]} km l’après-midi. Combien de kilomètres parcourt-il au total ?`]];
+ for(const [re,fn] of special){const m=q.match(re);if(m)return fn(m)}
+ let r=exactFrenchQuestionV10(e);if(r&&r!==q)return r;
+ r=translateQuestionFullV1016(e);return r||'Traduction française indisponible pour cette question.';
+}
+useFullJoker=function(boxId,eid){const e=getExerciseV10(eid);if(!e)return;const key=boxId+'-full';if(state.joker.activeBoxes[key])return;state.xp=Math.max(0,state.xp-5);state.joker.count++;state.joker.fullCount=(state.joker.fullCount||0)+1;state.joker.xpSpent+=5;state.joker.activeBoxes[key]=true;state.joker.activeBoxes[boxId]=true;const p=document.getElementById(boxId+'joker');p.style.display='block';p.innerHTML=`<div class="joker-help"><div class="joker-cost">🃏 Traduction complète · −5 XP</div><strong>🇫🇷 Traduction française complète</strong><p class="french">${fullFrenchV1020(e)}</p><p class="tiny">La solution n’est jamais révélée.</p></div>`;save();};
+
+const V1020_GROUPS=[
+ {id:'today',icon:'🎯',title:'HEUTE',help:'Commence ici. Ton programme du jour est préparé automatiquement.',open:true,items:[['todayplan','▶️','Mein Tagesplan'],['bonusplay','⭐','Bonus-Missionen']]},
+ {id:'learn',icon:'📚',title:'LERNEN',help:'Hier lernst du etwas Neues. · Erklären • Verstehen • Lernen',items:[['deutsch','🇩🇪','Deutsch'],['mathe','🔢','Mathematik'],['logik','🧠','Logik'],['vocab','📚','Wortschatz'],['lessons','📘','Lektionen'],['writing','✍️','Schreiben'],['dictation','🎧','Diktat'],['longreading','📖','Lesen']]},
+ {id:'train',icon:'🎯',title:'TRAINIEREN',help:'Hier übst du, was du schon gelernt hast. · Üben • Punkte sammeln • Besser werden',items:[['longseries','🏋️','Serien'],['boss','👑','Boss Tests'],['testcenter','🎯','Potenzialtest'],['startklar','🚀','Startklar Klasse 6'],['resources','🌐','Ressourcen'],['books','📚','Romane'],['projects','🔎','Projekte']]},
+ {id:'progress',icon:'🏆',title:'MEIN FORTSCHRITT',help:'Je vérifie que j’avance dans le programme.',items:[['programv1020','🧭','Mein Weg zum Gymnasium'],['roadmapplus','🗺️','Learning Path'],['coverage','✅','Kompetenzen'],['weeklycheck','🧪','Wochen-Check'],['stats','📈','Statistik'],['league','🏆','Liga'],['trophies','🎖️','Trophäen']]},
+ {id:'parent',icon:'🔐',title:'ELTERN / COACH',help:'Détails, diagnostic et contrôle du programme.',items:[['parents','🔐','Elternbereich'],['matrix','📊','Matrix'],['roadmap','📅','Roadmap Monate'],['daily','⚙️','Adaptive Engine'],['t0','🏕️','T0 Archiv'],['t0tests','🧪','T0 Tests'],['bank','🗃️','Aufgabenbank'],['freeanswer','🧠','Freie Antworten'],['jokerstats','🃏','Joker']]}
+];
+function renderSimpleNavV1020(){const nav=document.getElementById('nav');if(!nav)return;nav.innerHTML=V1020_GROUPS.map(g=>`<div class="v1019-nav-group ${g.open?'open':''}" data-group="${g.id}"><button class="v1019-nav-head" onclick="toggleV1019Group('${g.id}')">${g.icon} ${g.title}</button><div class="v1019-help">${g.help}</div><div class="v1019-nav-items">${g.items.map(p=>`<button data-page="${p[0]}" onclick="showScreen('${p[0]}')">${p[1]} ${p[2]}</button>`).join('')}</div></div>`).join('')}
+renderSimpleNavV1019=renderSimpleNavV1020;
+
+function decorateTodayV1020(){const p=document.querySelector('#todayplan>p.muted');if(p)p.textContent='60 echte Lernminuten. Der Plan führt dich jeden Tag im Programm weiter: Neues lernen + festigen + wiederholen + Schwächen verbessern.';const h=document.querySelector('#todayplan .card h2');if(h&&h.textContent.includes('Pflichtserie'))h.textContent='Dein Pflichtprogramm · 60 echte Minuten';}
+const oldShowV1020=showScreen;showScreen=function(id){oldShowV1020(id);if(id==='programv1020')renderProgramTrackerV1020();if(id==='parents')renderProgramTrackerV1020()};
+ensureProgramTrackerV1020();decorateHomeV1020();decorateTodayV1020();renderSimpleNavV1020();updateGauges();
+setTimeout(()=>{decorateHomeV1020();decorateTodayV1020();renderSimpleNavV1020();renderProgramTrackerV1020();updateGauges();renderStructuredDaily();},600);
 </script>
 
 </body></html>
