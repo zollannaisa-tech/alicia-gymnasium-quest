@@ -2788,12 +2788,11 @@ updateStats=function(){
  <hr style="border-color:#343d5d"><strong>🎯 Priorités</strong><br>${weak.map(c=>`${c.label} · ${scoreOf(c.id)===null?'non testé':scoreOf(c.id)+'%'}`).join('<br>')}`;
 }
 
-// Add diagnostic message to home
+// V10.20 correction: the initial diagnostic is already completed and must never appear on Alicia's Home page.
+// Diagnostic results remain available in the Parents/Coach/statistics area only.
 function v10HomeDiagnostic(){
- let el=document.getElementById('v10DiagHome');
- if(!el){el=document.createElement('div');el.id='v10DiagHome';const home=document.getElementById('home');home.insertBefore(el,home.firstChild);}
- const n=['T0DE','T0MA','T0LO','T0MX'].filter(id=>state.v10diag.done[id]).length;
- el.innerHTML=!diagCompleteV10()?`<div class="diag-banner"><h2>🧭 Étape 1 : diagnostic de départ ${n}/4</h2><p>Avant les Daily Quests classiques, Alicia commence par mesurer Deutsch, Mathematik et Logik. Ensuite le coach s’adapte automatiquement.</p><button class="btn gold" onclick="showScreen('t0tests')">Commencer / continuer le diagnostic</button></div>`:'';
+ const el=document.getElementById('v10DiagHome');
+ if(el) el.remove();
 }
 
 // Make current difficulty selection more adaptive
