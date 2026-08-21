@@ -8,10 +8,10 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 
-<title>Alicia Gymnasium Quest – V10.21</title>
-<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1021.png?v=1021">
-<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1021.png?v=1021">
-<link rel="manifest" href="manifest-v1021.webmanifest?v=1021">
+<title>Alicia Gymnasium Quest – V10.23</title>
+<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1023.png?v=1023">
+<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1023.png?v=1023">
+<link rel="manifest" href="manifest-v1023.webmanifest?v=1023">
 <meta name="theme-color" content="#0d1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -203,7 +203,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <meta name="apple-mobile-web-app-title" content="Alicia Gymnasium Quest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Alicia Gymnasium Quest">
-<meta property="og:image" content="alicia-gymnasium-icon-v1021.png?v=1021">
+<meta property="og:image" content="alicia-gymnasium-icon-v1023.png?v=1023">
 
 
 <style id="v1020-final-ux">
@@ -229,7 +229,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.21 · GLOBAL ZERO REPEAT</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.23 · ADAPTIVE PACING + HARD ZERO DUPLICATE</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -6043,6 +6043,583 @@ setInterval(z21PatchLogicButtons,700);
   old.forEach(s=>{if(s&&!all.includes(s))all.push(s)});
   saveSilent();
 })();
+</script>
+
+
+<script id="v1022-hard-duplicate-firewall">
+/* =========================================================
+   V10.22 HARD ZERO DUPLICATE
+   Final duplicate firewall is applied JUST BEFORE DISPLAY.
+   A question already displayed once is rejected everywhere.
+   Same competence may return only via a genuinely new variant.
+   ========================================================= */
+
+state.v1022 = state.v1022 || {
+  displayed: [],
+  displayedBySkill: {},
+  currentSessionSeen: [],
+  counter: 0
+};
+
+function h22norm(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[„“"'’`]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function h22sig(e){ return h22norm(e && e.question); }
+function h22seen(){ return new Set(state.v1022.displayed || []); }
+function h22sessionSeen(){ return new Set(state.v1022.currentSessionSeen || []); }
+function h22remember(e){
+  const s=h22sig(e); if(!s)return;
+  if(!state.v1022.displayed.includes(s)) state.v1022.displayed.push(s);
+  const sk=e.skill||'UNKNOWN';
+  state.v1022.displayedBySkill[sk]=state.v1022.displayedBySkill[sk]||[];
+  if(!state.v1022.displayedBySkill[sk].includes(s)) state.v1022.displayedBySkill[sk].push(s);
+  if(!state.v1022.currentSessionSeen.includes(s)) state.v1022.currentSessionSeen.push(s);
+  if(state.v1022.displayed.length>10000) state.v1022.displayed=state.v1022.displayed.slice(-10000);
+  saveSilent();
+}
+function h22id(prefix='Q'){
+  state.v1022.counter++;
+  return `${prefix}-${Date.now()}-${state.v1022.counter}-${Math.floor(Math.random()*99999999)}`;
+}
+function h22shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+function h22mc(correct,distractors){
+  const opts=h22shuffle([...new Set([correct,...distractors].map(String))]);
+  while(opts.length<4) opts.push(String(Number(correct)+opts.length+2));
+  return {options:opts.slice(0,4),answer:opts.slice(0,4).indexOf(String(correct))};
+}
+
+/* Huge procedural generators — designed so the same competency can be trained
+   without reusing the same concrete question. */
+function h22Logic(skill){
+  const s=skill||'L01';
+  let a,b,c,d,correct,mc;
+
+  if(['L01','L12','L13','L02'].includes(s)){
+    const mode=Math.floor(Math.random()*6);
+    if(mode===0){
+      a=2+Math.floor(Math.random()*80); b=2+Math.floor(Math.random()*14);
+      correct=a+5*b;
+      mc=h22mc(correct,[correct+b,correct-b,correct+1]);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Zahlenfolge',
+        question:`Welche Zahl folgt? ${a}, ${a+b}, ${a+2*b}, ${a+3*b}, ${a+4*b}, ?`,
+        options:mc.options,answer:mc.answer,skill:s,difficulty:1,explanation:'Die Differenz bleibt gleich.'};
+    }
+    if(mode===1){
+      a=90+Math.floor(Math.random()*90); b=2+Math.floor(Math.random()*12);
+      correct=a-5*b;
+      mc=h22mc(correct,[correct-b,correct+b,correct-1]);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Zahlenfolge',
+        question:`Welche Zahl folgt? ${a}, ${a-b}, ${a-2*b}, ${a-3*b}, ${a-4*b}, ?`,
+        options:mc.options,answer:mc.answer,skill:s,difficulty:1,explanation:'Die Zahlen werden immer um denselben Wert kleiner.'};
+    }
+    if(mode===2){
+      a=1+Math.floor(Math.random()*15); b=2+Math.floor(Math.random()*6);
+      const seq=[a,a+b,(a+b)*2,(a+b)*2+b,((a+b)*2+b)*2];
+      correct=seq[4]+b;
+      mc=h22mc(correct,[correct*2,correct-b,correct+1]);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Wechselmuster',
+        question:`Welche Zahl folgt beim Muster „+${b}, ×2“? ${seq.join(', ')}, ?`,
+        options:mc.options,answer:mc.answer,skill:s,difficulty:2,explanation:'Zwei Rechenregeln wechseln sich ab.'};
+    }
+    if(mode===3){
+      a=1+Math.floor(Math.random()*8);
+      const seq=[a,a+1,(a+1)*2,(a+1)*2+1,((a+1)*2+1)*2];
+      correct=seq[4]+1;
+      mc=h22mc(correct,[correct*2,correct-2,correct+2]);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Wechselmuster',
+        question:`Welche Zahl folgt? ${seq.join(' – ')} – ?`,
+        options:mc.options,answer:mc.answer,skill:s,difficulty:2,explanation:'Das Muster wechselt zwischen +1 und ×2.'};
+    }
+    if(mode===4){
+      a=2+Math.floor(Math.random()*10);
+      const seq=[a,a*a,(a+1),(a+1)*(a+1),(a+2)];
+      correct=(a+2)*(a+2);
+      mc=h22mc(correct,[correct+1,correct-(a+2),a+3]);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Zahlenmuster',
+        question:`Welche Zahl folgt? ${seq.join(', ')}, ?`,
+        options:mc.options,answer:mc.answer,skill:s,difficulty:2,explanation:'Zahl und Quadrat wechseln sich ab.'};
+    }
+    a=3+Math.floor(Math.random()*20); b=2+Math.floor(Math.random()*7);
+    const seq=[a,a+b,a+b+2,a+b+2+b,a+b+2+b+2];
+    correct=seq[4]+b;
+    mc=h22mc(correct,[correct+2,correct-b,correct+1]);
+    return {id:h22id('L'),domain:'Logik',title:'Logik · Wechselmuster',
+      question:`Welche Zahl folgt beim Muster „+${b}, +2“? ${seq.join(', ')}, ?`,
+      options:mc.options,answer:mc.answer,skill:s,difficulty:2,explanation:'Zwei Schritte wechseln sich ab.'};
+  }
+
+  if(['L03','L04','L10','L11'].includes(s)){
+    const bank=[
+      ['Auge','sehen','Ohr','hören'],['Nase','riechen','Zunge','schmecken'],
+      ['Vogel','fliegen','Fisch','schwimmen'],['Stift','schreiben','Schere','schneiden'],
+      ['Buch','lesen','Radio','hören'],['Biene','Honig','Kuh','Milch'],
+      ['Winter','kalt','Sommer','warm'],['Hand','Handschuh','Fuß','Schuh'],
+      ['Arzt','Praxis','Lehrer','Schule'],['Zug','Bahnhof','Flugzeug','Flughafen'],
+      ['Schlüssel','Tür','Passwort','Computer'],['Bäcker','Brot','Maler','Bild'],
+      ['Tennis','Schläger','Fußball','Ball'],['Regen','Regenschirm','Sonne','Sonnenbrille'],
+      ['Morgen','Frühstück','Abend','Abendessen'],['Bibliothek','Bücher','Museum','Bilder'],
+      ['Zahnarzt','Zähne','Tierarzt','Tiere'],['Küche','kochen','Werkstatt','reparieren'],
+      ['Kamera','Foto','Mikrofon','Ton'],['Schule','lernen','Stadion','trainieren']
+    ];
+    const x=bank[Math.floor(Math.random()*bank.length)];
+    const wrong=h22shuffle(['Tisch','laufen','blau','Fenster','springen','Wasser','Lampe','Wolke']).slice(0,3);
+    const opts=h22shuffle([x[3],...wrong]);
+    return {id:h22id('L'),domain:'Logik',title:'Logik · Analogie',
+      question:`Ergänze die Analogie: ${x[0]} verhält sich zu ${x[1]} wie ${x[2]} zu ...`,
+      options:opts,answer:opts.indexOf(x[3]),skill:s,difficulty:1,explanation:'Suche dieselbe Beziehung.'};
+  }
+
+  if(['L05','L06','L14'].includes(s)){
+    const sets=[
+      [['Hund','Katze','Pferd'],'Rose'],[['rot','blau','grün'],'laufen'],
+      [['Montag','Dienstag','Freitag'],'Januar'],[['Apfel','Birne','Pflaume'],'Stuhl'],
+      [['Meter','Zentimeter','Kilometer'],'Liter'],[['Tennis','Fußball','Handball'],'Klavier'],
+      [['Paris','Berlin','Rom'],'Donau'],[['Quadrat','Kreis','Dreieck'],'Banane'],
+      [['Frühling','Sommer','Winter'],'Dienstag'],[['lesen','schreiben','rechnen'],'gelb'],
+      [['Bus','Zug','Fahrrad'],'Küche'],[['Amsel','Adler','Spatz'],'Delfin'],
+      [['Kilo','Gramm','Tonne'],'Stunde'],[['Januar','März','Oktober'],'Montag'],
+      [['Hammer','Säge','Bohrer'],'Kissen'],[['Rose','Tulpe','Lilie'],'Eiche']
+    ];
+    const x=sets[Math.floor(Math.random()*sets.length)];
+    const opts=h22shuffle([...x[0],x[1]]);
+    return {id:h22id('L'),domain:'Logik',title:'Logik · Ausschluss',
+      question:`Was passt nicht in die Gruppe? ${opts.join(' – ')}`,
+      options:opts,answer:opts.indexOf(x[1]),skill:s,difficulty:1,explanation:'Drei Dinge gehören zusammen.'};
+  }
+
+  if(['L07','L08','L09'].includes(s)){
+    const names=h22shuffle(['Mia','Lea','Zoe','Emma','Lina','Sara','Noah','Finn','Paul','Max','Theo','Luca']).slice(0,4);
+    const mode=Math.floor(Math.random()*5);
+    if(mode===0){
+      const q=`${names[0]} ist älter als ${names[1]}. ${names[1]} ist älter als ${names[2]}. Wer ist am jüngsten?`;
+      const opts=h22shuffle([names[0],names[1],names[2],'nicht bestimmbar']);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Deduktion',question:q,options:opts,answer:opts.indexOf(names[2]),skill:s,difficulty:1,explanation:'Ordne die Aussagen.'};
+    }
+    if(mode===1){
+      const q=`${names[0]} läuft schneller als ${names[1]}. ${names[1]} läuft schneller als ${names[2]}. Wer ist am schnellsten?`;
+      const opts=h22shuffle([names[0],names[1],names[2],'nicht bestimmbar']);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Deduktion',question:q,options:opts,answer:opts.indexOf(names[0]),skill:s,difficulty:1,explanation:'Ordne die Aussagen.'};
+    }
+    if(mode===2){
+      const q=`${names[0]} steht vor ${names[1]}. ${names[1]} steht vor ${names[2]}. Wer steht in der Mitte?`;
+      const opts=h22shuffle([names[0],names[1],names[2],'nicht bestimmbar']);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Reihenfolge',question:q,options:opts,answer:opts.indexOf(names[1]),skill:s,difficulty:1,explanation:'Stelle dir die Reihenfolge vor.'};
+    }
+    if(mode===3){
+      const q=`${names[0]} hat mehr Punkte als ${names[1]}. ${names[2]} hat weniger Punkte als ${names[1]}. Wer hat die wenigsten Punkte?`;
+      const opts=h22shuffle([names[0],names[1],names[2],'nicht bestimmbar']);
+      return {id:h22id('L'),domain:'Logik',title:'Logik · Vergleich',question:q,options:opts,answer:opts.indexOf(names[2]),skill:s,difficulty:1,explanation:'Vergleiche alle Aussagen.'};
+    }
+    const q=`${names[0]} sitzt links von ${names[1]}. ${names[2]} sitzt rechts von ${names[1]}. Wer sitzt in der Mitte?`;
+    const opts=h22shuffle([names[0],names[1],names[2],'nicht bestimmbar']);
+    return {id:h22id('L'),domain:'Logik',title:'Logik · Raumlage',question:q,options:opts,answer:opts.indexOf(names[1]),skill:s,difficulty:1,explanation:'Ordne links und rechts.'};
+  }
+
+  return h22Logic('L01');
+}
+
+function h22Math(skill){
+  const s=skill||'M08';
+  let a,b,c,correct,mc;
+  const mode=Math.floor(Math.random()*5);
+  if(['M08','M10'].includes(s)){
+    a=100+Math.floor(Math.random()*1800); b=20+Math.floor(Math.random()*700); correct=a+b;
+    mc=h22mc(correct,[correct+10,correct-10,correct+100]);
+    return {id:h22id('M'),domain:'Mathematik',title:'Mathematik · Addition',question:`${a} + ${b} = ?`,options:mc.options,answer:mc.answer,skill:s,difficulty:1,explanation:'Addiere sorgfältig.'};
+  }
+  if(['M09','M11'].includes(s)){
+    a=500+Math.floor(Math.random()*1800); b=20+Math.floor(Math.random()*Math.min(700,a-1)); correct=a-b;
+    mc=h22mc(correct,[correct+10,correct-10,correct+100]);
+    return {id:h22id('M'),domain:'Mathematik',title:'Mathematik · Subtraktion',question:`${a} − ${b} = ?`,options:mc.options,answer:mc.answer,skill:s,difficulty:1,explanation:'Subtrahiere sorgfältig.'};
+  }
+  if(['M12','M13','M14'].includes(s)){
+    a=3+Math.floor(Math.random()*10); b=8+Math.floor(Math.random()*40); correct=a*b;
+    mc=h22mc(correct,[correct+a,correct-a,correct+b]);
+    return {id:h22id('M'),domain:'Mathematik',title:'Mathematik · Mal/Geteilt',question:`${a} Gruppen mit je ${b} Punkten ergeben zusammen wie viele Punkte?`,options:mc.options,answer:mc.answer,skill:s,difficulty:1,explanation:'Multipliziere.'};
+  }
+  if(['M16','M17','M18','M19','M20','M21','M22','M24','M25'].includes(s)){
+    const boxes=3+Math.floor(Math.random()*12), each=4+Math.floor(Math.random()*15), used=Math.floor(Math.random()*15);
+    correct=boxes*each-used;
+    mc=h22mc(correct,[boxes*each,correct+each,Math.max(0,correct-used)]);
+    return {id:h22id('M'),domain:'Mathematik',title:'Mathematik · Sachaufgabe',
+      question:`Für ein Training gibt es ${boxes} Körbe mit jeweils ${each} Bällen. ${used} Bälle werden bereits benutzt. Wie viele Bälle bleiben in den Körben?`,
+      options:mc.options,answer:mc.answer,skill:s,difficulty:2,explanation:'Erst multiplizieren, dann abziehen.'};
+  }
+  if(['M43','M47','M48'].includes(s)){
+    const h=7+Math.floor(Math.random()*12), m=[0,5,10,15,20,25,30,35,40,45,50][Math.floor(Math.random()*11)], dur=[20,25,30,35,40,45,50,55,65,70,75,80,85][Math.floor(Math.random()*13)];
+    const total=h*60+m+dur, eh=Math.floor(total/60)%24, em=total%60;
+    correct=`${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')} Uhr`;
+    const opts=h22shuffle([correct,`${String(eh).padStart(2,'0')}:${String((em+10)%60).padStart(2,'0')} Uhr`,`${String((eh+1)%24).padStart(2,'0')}:${String(em).padStart(2,'0')} Uhr`,`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} Uhr`]);
+    return {id:h22id('M'),domain:'Mathematik',title:'Mathematik · Zeit',
+      question:`Ein Kurs beginnt um ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} Uhr und dauert ${dur} Minuten. Wann endet er?`,
+      options:opts,answer:opts.indexOf(correct),skill:s,difficulty:2,explanation:'Addiere die Dauer zur Startzeit.'};
+  }
+  return h22Math('M08');
+}
+
+function h22Deutsch(skill){
+  const s=skill||'D01';
+  if(/^D(0[1-9]|1[0-9]|2[0-3])$/.test(s)){
+    const day=h22shuffle(['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'])[0];
+    const place=h22shuffle(['Schulgarten','Bibliothek','Sporthalle','Museum','Naturpark','Schulhof','Werkstatt'])[0];
+    const group=h22shuffle(['die vierte Klasse','eine Lerngruppe','Alicia und zwei Mitschülerinnen','die Kinder der fünften Klasse'])[0];
+    const first=h22shuffle(['sammeln Informationen','lesen einen kurzen Text','beobachten mehrere Stationen','lösen drei Aufgaben'])[0];
+    const after=h22shuffle(['vergleichen sie ihre Ergebnisse','schreiben sie eine Zusammenfassung','stellen sie ihre Ergebnisse vor','ordnen sie ihre Notizen'])[0];
+    const text=`Am ${day} besucht ${group} den ${place}. Zuerst ${first}. Nach einer kurzen Pause ${after}. Am Ende besprechen alle gemeinsam, was sie gelernt haben.`;
+    const correct=after.charAt(0).toUpperCase()+after.slice(1)+'.';
+    const opts=h22shuffle([correct,'Sie fahren sofort nach Hause.','Sie bekommen keine Aufgaben mehr.','Sie schlafen.']);
+    return {id:h22id('D'),domain:'Deutsch',title:'Deutsch · Lesen',question:`${text}\n\nWas passiert nach der Pause?`,options:opts,answer:opts.indexOf(correct),skill:s,difficulty:1,explanation:'Suche die Information im Text.'};
+  }
+  const grammar=[
+    ['Welches Wort ist ein Nomen?',['Abenteuer','entdecken','mutig','unter'],'Abenteuer'],
+    ['Welches Wort ist ein Verb?',['beobachten','Fernglas','spannend','das'],'beobachten'],
+    ['Welches Wort ist ein Adjektiv?',['neugierig','forschen','Schule','die'],'neugierig'],
+    ['Welcher Artikel passt zu „Bibliothek“?',['die','der','das','den'],'die'],
+    ['Was ist der Infinitiv von „schrieb“?',['schreiben','schrieb','geschrieben','schreibt'],'schreiben'],
+    ['Was ist der Infinitiv von „fand“?',['finden','fand','gefunden','findet'],'finden'],
+    ['Welche Form steht im Perfekt?',['wir haben gelernt','wir lernen','wir lernten','wir werden lernen'],'wir haben gelernt'],
+    ['Welche Form steht im Präteritum?',['sie spielte','sie spielt','sie hat gespielt','sie wird spielen'],'sie spielte'],
+    ['Welcher Satz ist richtig?',['Ich lerne, weil ich morgen einen Test habe.','Ich lerne, weil ich habe morgen einen Test.','Weil ich habe morgen einen Test, ich lerne.','Ich weil morgen Test lerne.'],'Ich lerne, weil ich morgen einen Test habe.']
+  ];
+  const x=grammar[Math.floor(Math.random()*grammar.length)];
+  const opts=h22shuffle(x[1]);
+  return {id:h22id('D'),domain:'Deutsch',title:'Deutsch · Grammatik',question:x[0],options:opts,answer:opts.indexOf(x[2]),skill:s,difficulty:1,explanation:'Wende die passende Regel an.'};
+}
+
+function h22Generate(skill){
+  if(String(skill).startsWith('L')) return h22Logic(skill);
+  if(String(skill).startsWith('M')) return h22Math(skill);
+  if(String(skill).startsWith('D')) return h22Deutsch(skill);
+  return null;
+}
+
+function h22FreshUnseen(skill){
+  const seen=h22seen(), sess=h22sessionSeen();
+  let guard=0;
+  while(guard++<3000){
+    const e=h22Generate(skill);
+    if(!e) continue;
+    const s=h22sig(e);
+    if(s && !seen.has(s) && !sess.has(s)){
+      if(Array.isArray(EXERCISES)) EXERCISES.push(e);
+      return e;
+    }
+  }
+  return null;
+}
+
+/* Import all previous anti-repeat memories */
+(function h22Import(){
+  const sources=[
+    state.v1021NoRepeat&&state.v1021NoRepeat.shownSignatures,
+    state.v1020NoRepeat&&state.v1020NoRepeat.globalRecent,
+    state.v1018&&state.v1018.recent
+  ].filter(Boolean);
+  sources.forEach(arr=>arr.forEach(s=>{if(s&&!state.v1022.displayed.includes(s))state.v1022.displayed.push(s)}));
+  saveSilent();
+})();
+
+/* Reset only CURRENT-session signatures at session start. Persistent history remains. */
+const h22StartSessionOriginal=window.startSession;
+window.startSession=function(list,boxId,kind){
+  state.v1022.currentSessionSeen=[];
+  let incoming=(list||[]).filter(Boolean);
+  const target=Math.max(1,incoming.length||8);
+  const skill=(incoming.find(e=>e&&e.skill)||{}).skill || (state.currentDailyStep&&state.currentDailyStep.skill) || null;
+  const seen=h22seen(), local=new Set();
+  const out=[];
+  for(const e of incoming){
+    const s=h22sig(e);
+    if(s&&!seen.has(s)&&!local.has(s)){out.push(e);local.add(s)}
+    if(out.length>=target)break;
+  }
+  let guard=0;
+  while(out.length<target && skill && guard++<3000){
+    const e=h22FreshUnseen(skill); if(!e)break;
+    const s=h22sig(e); if(!local.has(s)){out.push(e);local.add(s)}
+  }
+  return h22StartSessionOriginal(out,boxId,kind);
+};
+
+/* THE FIREWALL:
+   Immediately before a question is displayed, verify it has NEVER been shown.
+   If duplicate -> reject and replace, then render only the fresh question. */
+const h22RenderOriginal=window.renderExercise;
+window.renderExercise=function(boxId,e,after,exam){
+  if(!e){return}
+  const seen=h22seen(), sess=h22sessionSeen(), sig=h22sig(e);
+  let fresh=e;
+  if(!sig || seen.has(sig) || sess.has(sig)){
+    const replacement=h22FreshUnseen(e.skill || (state.currentDailyStep&&state.currentDailyStep.skill));
+    if(replacement) fresh=replacement;
+  }
+  const fs=h22sig(fresh);
+  // absolute last check
+  if(!fs || seen.has(fs) || sess.has(fs)){
+    const box=document.getElementById(boxId);
+    if(box){
+      box.style.display='block';
+      box.innerHTML='<div class="notice warn"><strong>Keine Wiederholung erlaubt.</strong><br>Eine neue Frage wird erzeugt. Bitte auf „Weiter“ drücken.</div><button class="btn" onclick="showSessionCurrent()">Weiter</button>';
+    }
+    return;
+  }
+  h22remember(fresh);
+  return h22RenderOriginal(boxId,fresh,after,exam);
+};
+
+/* If daily-step pack finishes too quickly, regenerate an entirely new pack.
+   Since renderExercise has the firewall, duplicates are impossible even if an old
+   generator accidentally proposes one. */
+const h22FinishOriginal=window.finishSession;
+window.finishSession=function(){
+  if(state.session && state.session.kind==='daily-step' && state.currentDailyStep){
+    const cur={...state.currentDailyStep}, boxId=state.session.boxId;
+    let elapsed=0;
+    try{
+      const k=today();
+      elapsed=(state.v1018&&state.v1018.stepSeconds&&state.v1018.stepSeconds[k]&&state.v1018.stepSeconds[k][cur.id])||0;
+    }catch(e){}
+    const goal=(Number(cur.min)||0)*60;
+    if(elapsed<goal){
+      const pack=[];
+      for(let i=0;i<10;i++){
+        const e=h22FreshUnseen(cur.skill);
+        if(e)pack.push(e);
+      }
+      state.session=null; saveSilent();
+      const box=document.getElementById(boxId);
+      if(box)box.innerHTML=`<h2>✅ Serie fertig</h2><p class="muted">Noch ${Math.max(1,Math.ceil((goal-elapsed)/60))} Minuten. Jetzt kommen nur neue Fragen.</p>`;
+      setTimeout(()=>startSession(pack,boxId,'daily-step'),200);
+      return;
+    }
+  }
+  return h22FinishOriginal();
+};
+</script>
+
+
+<style id="v1023-adaptive-pacing-style">
+.v1023-pace{
+  margin-top:8px;padding:8px 10px;border-radius:10px;background:#1c2942;
+  border:1px solid #334b72;color:#dbeafe;font-size:12px;line-height:1.35
+}
+.v1023-speed{font-weight:900;color:#7dd3fc}
+</style>
+
+<script id="v1023-adaptive-pacing">
+/* =========================================================
+   V10.23 — ADAPTIVE PACING
+   Le TEMPS prévu du bloc est la cible.
+   Le nombre de questions s'adapte au rythme réel d'Alicia,
+   par compétence, tout en conservant le HARD ZERO DUPLICATE.
+   ========================================================= */
+
+state.v1023Pace = state.v1023Pace || {
+  bySkill:{},            // skill -> recent answer times (seconds)
+  global:[],
+  shownAt:null,
+  shownSkill:null,
+  lastEstimate:{}
+};
+
+function p23Clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+function p23Median(arr){
+  if(!arr || !arr.length) return null;
+  const a=[...arr].sort((x,y)=>x-y);
+  const m=Math.floor(a.length/2);
+  return a.length%2 ? a[m] : (a[m-1]+a[m])/2;
+}
+function p23DefaultSeconds(skill){
+  // Defaults intentionally conservative until Alicia has enough real data.
+  if(String(skill).startsWith('L')) return 20;
+  if(String(skill).startsWith('M')) return 25;
+  if(String(skill).startsWith('D')){
+    const n=Number(String(skill).slice(1));
+    if(n>=1 && n<=23) return 45; // reading comprehension
+    return 25;
+  }
+  return 30;
+}
+function p23SecPerQuestion(skill){
+  const s=state.v1023Pace.bySkill[skill] || [];
+  const skillMed=p23Median(s.slice(-20));
+  const globalMed=p23Median((state.v1023Pace.global||[]).slice(-40));
+  const est=skillMed || globalMed || p23DefaultSeconds(skill);
+  return p23Clamp(est,8,120);
+}
+function p23Record(skill,seconds){
+  if(!skill || !Number.isFinite(seconds)) return;
+  // Ignore ultra-fast accidental taps and long idle periods.
+  if(seconds < 3 || seconds > 180) return;
+  state.v1023Pace.bySkill[skill]=state.v1023Pace.bySkill[skill]||[];
+  state.v1023Pace.bySkill[skill].push(seconds);
+  state.v1023Pace.bySkill[skill]=state.v1023Pace.bySkill[skill].slice(-30);
+  state.v1023Pace.global.push(seconds);
+  state.v1023Pace.global=state.v1023Pace.global.slice(-80);
+  saveSilent();
+}
+function p23EstimatedQuestions(skill,minutes){
+  const sec=p23SecPerQuestion(skill);
+  return Math.max(1,Math.ceil((Number(minutes)||1)*60/sec));
+}
+function p23BatchSize(skill,minutes){
+  // Load manageable chunks, but estimate the full expected volume.
+  const est=p23EstimatedQuestions(skill,minutes);
+  return Math.min(20,Math.max(8,est));
+}
+function p23PaceText(skill,minutes){
+  const sec=p23SecPerQuestion(skill);
+  const q=p23EstimatedQuestions(skill,minutes);
+  return `Rythme estimé : ~${Math.round(sec)} s/question · environ ${q} questions pour ${minutes} min.`;
+}
+
+/* Time each displayed question. */
+const p23RenderExerciseOriginal = window.renderExercise;
+window.renderExercise=function(boxId,e,after,exam){
+  state.v1023Pace.shownAt=Date.now();
+  state.v1023Pace.shownSkill=e&&e.skill||null;
+  const result=p23RenderExerciseOriginal(boxId,e,after,exam);
+  try{
+    const box=document.getElementById(boxId);
+    if(box && e){
+      let pace=box.querySelector('.v1023-pace');
+      if(!pace){
+        pace=document.createElement('div');
+        pace.className='v1023-pace';
+        const fb=box.querySelector('[id$="fb"]');
+        if(fb) box.insertBefore(pace,fb); else box.appendChild(pace);
+      }
+      const cur=state.currentDailyStep;
+      if(cur && cur.skill===e.skill){
+        pace.innerHTML=`⏱️ <span class="v1023-speed">${p23PaceText(e.skill,cur.min)}</span><br>Le bloc continue automatiquement jusqu'à la vraie durée prévue.`;
+      }else{
+        const sec=p23SecPerQuestion(e.skill);
+        pace.textContent=`Rythme personnel actuel : ~${Math.round(sec)} s/question.`;
+      }
+    }
+  }catch(err){}
+  return result;
+};
+
+/* Record answer speed before the old answer handler changes the screen. */
+const p23AnswerOriginal = window.answer;
+window.answer=function(boxId,eid,choice,exam){
+  try{
+    const e=EXERCISES.find(x=>x.id===eid);
+    if(e && state.v1023Pace.shownAt){
+      const elapsed=(Date.now()-state.v1023Pace.shownAt)/1000;
+      p23Record(e.skill,elapsed);
+      state.v1023Pace.shownAt=null;
+    }
+  }catch(err){}
+  return p23AnswerOriginal(boxId,eid,choice,exam);
+};
+
+/* Tagesplan start:
+   Question count is estimated from Alicia's measured speed instead of a fixed 8/9/10. */
+window.startDailyStep=function(id,action,skill,min){
+  const ds=getDailyState(); if(ds.steps[id])return;
+  state.currentDailyStep={id,action,skill,min:Number(min)||0,date:today()};
+
+  if(skill){
+    const estimated=p23EstimatedQuestions(skill,min);
+    const batch=p23BatchSize(skill,min);
+    const pack=[];
+    for(let i=0;i<batch;i++){
+      const e=(typeof h22FreshUnseen==='function') ? h22FreshUnseen(skill)
+              : (typeof z21Fresh==='function' ? z21Fresh(skill,1)[0] : null);
+      if(e)pack.push(e);
+    }
+
+    const title=document.getElementById('v10RunnerTitle');
+    const sub=document.getElementById('v10RunnerSub');
+    if(title)title.textContent='🎯 '+(COMPETENCES.find(c=>c.id===skill)?.label||'Tagestraining');
+    if(sub)sub.textContent=`${min} echte Minuten · ≈ ${estimated} Fragen bei deinem aktuellen Tempo · keine Wiederholung`;
+
+    if(pack.length){
+      startSession(pack,'v10Exercise','daily-step');
+      showScreen('runner');
+    }
+    return;
+  }
+  showScreen(action||'todayplan');
+};
+
+/* When one batch ends before target time:
+   compute remaining minutes AND Alicia's current measured speed, then generate
+   an appropriately sized next batch. */
+const p23FinishOriginal = window.finishSession;
+window.finishSession=function(){
+  if(state.session && state.session.kind==='daily-step' && state.currentDailyStep){
+    const cur={...state.currentDailyStep}, boxId=state.session.boxId;
+
+    let elapsed=0;
+    try{
+      const k=today();
+      elapsed=(state.v1018&&state.v1018.stepSeconds&&state.v1018.stepSeconds[k]&&state.v1018.stepSeconds[k][cur.id])||0;
+    }catch(e){}
+
+    const goal=(Number(cur.min)||0)*60;
+    if(elapsed < goal){
+      const remaining=Math.max(1,goal-elapsed);
+      const secPerQ=p23SecPerQuestion(cur.skill);
+      const needed=Math.max(1,Math.ceil(remaining/secPerQ));
+      const batchSize=Math.min(20,Math.max(8,needed));
+      const pack=[];
+
+      for(let i=0;i<batchSize;i++){
+        const e=(typeof h22FreshUnseen==='function') ? h22FreshUnseen(cur.skill)
+                : (typeof z21Fresh==='function' ? z21Fresh(cur.skill,1)[0] : null);
+        if(e)pack.push(e);
+      }
+
+      state.session=null; saveSilent();
+      const box=document.getElementById(boxId);
+      if(box){
+        box.innerHTML=`<h2>✅ Serie fertig</h2>
+          <p class="muted">Il reste environ ${Math.ceil(remaining/60)} min.</p>
+          <div class="v1023-pace">Ton rythme actuel est d'environ <strong>${Math.round(secPerQ)} s/question</strong> :
+          je prépare ${pack.length} nouvelles questions maintenant.</div>`;
+      }
+      if(pack.length){
+        setTimeout(()=>startSession(pack,boxId,'daily-step'),220);
+      }
+      return;
+    }
+  }
+  return p23FinishOriginal();
+};
+
+/* Show adaptive counts directly in the Tagesplan list. */
+const p23RenderDailyOriginal = window.renderStructuredDaily;
+window.renderStructuredDaily=function(){
+  p23RenderDailyOriginal();
+  try{
+    const tpl=dailyTemplate();
+    const host=document.getElementById('structuredDailyPlan');
+    if(!host)return;
+    const rows=[...host.querySelectorAll('.daily-step')];
+    rows.forEach((row,i)=>{
+      const s=tpl[i]; if(!s || !s.skill)return;
+      let info=row.querySelector('.v1023-pace');
+      if(!info){
+        info=document.createElement('div');
+        info.className='v1023-pace';
+        const mid=row.children[1];
+        if(mid)mid.appendChild(info);
+      }
+      const sec=p23SecPerQuestion(s.skill);
+      const n=p23EstimatedQuestions(s.skill,s.min);
+      info.innerHTML=`Tempo personnel : ~${Math.round(sec)} s/question → <strong>≈ ${n} questions prévues pour ${s.min} min</strong>.`;
+    });
+  }catch(err){}
+};
+
+setTimeout(()=>{try{renderStructuredDaily()}catch(e){}},500);
 </script>
 
 </body></html>

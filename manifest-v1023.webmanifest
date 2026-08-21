@@ -1,0 +1,21 @@
+{
+  "name": "Alicia Gymnasium Quest V10.23",
+  "short_name": "AG Quest",
+  "start_url": "/?v=1023",
+  "display": "standalone",
+  "background_color": "#0f1325",
+  "theme_color": "#6d5bf3",
+  "icons": [
+    {
+      "src": "alicia-gymnasium-icon-v1023.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "alicia-gymnasium-apple-v1023.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "id": "/?v=1023"
+}
