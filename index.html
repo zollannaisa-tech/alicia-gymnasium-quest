@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Alicia Gymnasium Quest – V10.19</title>
-<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1020.png?v=1019">
-<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1020.png?v=1020">
-<link rel="manifest" href="manifest-v1020.webmanifest?v=1019">
+<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1021.png?v=1019">
+<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1021.png?v=1020">
+<link rel="manifest" href="manifest-v1021.webmanifest?v=1019">
 <meta name="theme-color" content="#0d1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -198,7 +198,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <meta name="apple-mobile-web-app-title" content="Alicia Gymnasium Quest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Alicia Gymnasium Quest">
-<meta property="og:image" content="alicia-gymnasium-icon-v1020.png?v=1020">
+<meta property="og:image" content="alicia-gymnasium-icon-v1021.png?v=1020">
 
 
 <style id="v1020-final-ux">
@@ -5450,7 +5450,7 @@ setTimeout(installGuidesV1020,600);
 
 
 <script id="v1020-norepeat-engine">
-/* ===== V10.20 HOTFIX — ZERO REPEAT TAGESPLAN ===== */
+/* ===== V10.21 HOTFIX — ZERO REPEAT TAGESPLAN ===== */
 state.v1020NoRepeat = state.v1020NoRepeat || {
   byDate:{},          // signatures réellement montrées par jour
   globalRecent:[],    // mémoire longue anti-répétition
@@ -5717,6 +5717,324 @@ window.startLogicFreshV1018=function(skill,n){const p=nrFreshPack(skill,n);start
   const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-45);
   const cs=cutoff.toISOString().slice(0,10);
   Object.keys(state.v1020NoRepeat.byDate).forEach(d=>{if(d<cs)delete state.v1020NoRepeat.byDate[d]});
+  saveSilent();
+})();
+</script>
+
+
+<script id="v1021-global-zero-repeat">
+/* ==========================================================
+   V10.21 — GLOBAL ZERO REPEAT
+   Règle : une question déjà affichée n'est plus reproposée
+   automatiquement dans Tagesplan, Logik, Deutsch, Mathe,
+   Daily Quest, séries ou Bonus. Les révisions explicites
+   peuvent travailler la même COMPETENCE, mais avec une
+   NOUVELLE QUESTION / NOUVELLES VALEURS / NOUVEAU CONTEXTE.
+   ========================================================== */
+
+state.v1021NoRepeat = state.v1021NoRepeat || {
+  shownSignatures: [],
+  shownByDate: {},
+  logicTemplatesUsed: {},
+  counter: 0
+};
+
+function z21norm(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[„“"'’`]/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+function z21sig(e){
+  return z21norm((e&&e.question)||'');
+}
+function z21seenSet(){
+  return new Set(state.v1021NoRepeat.shownSignatures || []);
+}
+function z21remember(e){
+  const s=z21sig(e); if(!s)return;
+  const a=state.v1021NoRepeat.shownSignatures;
+  if(!a.includes(s)) a.push(s);
+  if(a.length>5000) state.v1021NoRepeat.shownSignatures=a.slice(-5000);
+  const d=today();
+  state.v1021NoRepeat.shownByDate[d]=state.v1021NoRepeat.shownByDate[d]||[];
+  if(!state.v1021NoRepeat.shownByDate[d].includes(s)) state.v1021NoRepeat.shownByDate[d].push(s);
+  saveSilent();
+}
+function z21id(p='Q'){
+  state.v1021NoRepeat.counter++;
+  return `${p}-${Date.now()}-${state.v1021NoRepeat.counter}-${Math.floor(Math.random()*9999999)}`;
+}
+function z21shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+function z21mc(correct, distractors){
+  const vals=[correct,...distractors].map(String);
+  const opts=z21shuffle([...new Set(vals)]);
+  while(opts.length<4) opts.push(String(Number(correct)+opts.length+1));
+  return {options:opts.slice(0,4),answer:opts.slice(0,4).indexOf(String(correct))};
+}
+
+/* ---------- LOGIK: large procedural generator ---------- */
+function z21Logic(skill){
+  const s=skill||'L01';
+  let q, correct, d, mc;
+
+  if(['L01','L02','L12','L13'].includes(s)){
+    const mode=Math.floor(Math.random()*4);
+    if(mode===0){
+      const a=2+Math.floor(Math.random()*35), step=2+Math.floor(Math.random()*11);
+      const seq=[a,a+step,a+2*step,a+3*step]; correct=a+4*step;
+      mc=z21mc(correct,[correct+step,correct-step,correct+1]);
+      q=`Welche Zahl folgt? ${seq.join(' – ')} – ?`;
+    } else if(mode===1){
+      const a=3+Math.floor(Math.random()*20), step=2+Math.floor(Math.random()*7);
+      const seq=[a,a+step,a+step*2,a+step*3,a+step*4]; correct=a+step*5;
+      mc=z21mc(correct,[correct+step,correct-1,correct+2]);
+      q=`Setze die Zahlenreihe fort: ${seq.join(', ')}, ...`;
+    } else if(mode===2){
+      const a=60+Math.floor(Math.random()*50), step=2+Math.floor(Math.random()*9);
+      const seq=[a,a-step,a-2*step,a-3*step]; correct=a-4*step;
+      mc=z21mc(correct,[correct-step,correct+step,correct-1]);
+      q=`Welche Zahl kommt als Nächstes? ${seq.join(' – ')} – ?`;
+    } else {
+      const a=1+Math.floor(Math.random()*9), b=2+Math.floor(Math.random()*6);
+      const seq=[a,a+b,a+b+2,a+b+2+b,a+b+2+b+2];
+      correct=seq[4]+b;
+      mc=z21mc(correct,[correct+2,correct-b,correct+1]);
+      q=`Erkenne das Muster (+${b}, +2): ${seq.join(' – ')} – ?`;
+    }
+    return {id:z21id('L'),domain:'Logik',title:'Logik · Zahlenmuster',question:q,
+      options:mc.options,answer:mc.answer,skill:s,difficulty:1,
+      explanation:'Finde zuerst die Regel der Zahlenfolge.'};
+  }
+
+  if(['L03','L04','L10'].includes(s)){
+    const pairs=[
+      ['Auge','sehen','Ohr','hören'],['Nase','riechen','Zunge','schmecken'],
+      ['Vogel','fliegen','Fisch','schwimmen'],['Stift','schreiben','Schere','schneiden'],
+      ['Buch','lesen','Radio','hören'],['Biene','Honig','Kuh','Milch'],
+      ['Winter','kalt','Sommer','warm'],['Hand','Handschuh','Fuß','Schuh'],
+      ['Arzt','Praxis','Lehrer','Schule'],['Tennis','Schläger','Fußball','Ball'],
+      ['Morgen','Frühstück','Abend','Abendessen'],['Regen','Regenschirm','Sonne','Sonnenbrille'],
+      ['Schlüssel','Tür','Passwort','Computer'],['Zug','Bahnhof','Flugzeug','Flughafen'],
+      ['Bäcker','Brot','Maler','Bild'],['Bibliothek','Bücher','Museum','Bilder']
+    ];
+    const x=pairs[Math.floor(Math.random()*pairs.length)];
+    const wrong=z21shuffle(['laufen','Tisch','blau','Fenster','springen','Wasser'].filter(v=>v!==x[3])).slice(0,3);
+    const opts=z21shuffle([x[3],...wrong]);
+    return {id:z21id('L'),domain:'Logik',title:'Logik · Analogie',
+      question:`Welche Beziehung passt? ${x[0]} : ${x[1]} = ${x[2]} : ?`,
+      options:opts,answer:opts.indexOf(x[3]),skill:s,difficulty:1,
+      explanation:'Übertrage dieselbe Beziehung auf das zweite Paar.'};
+  }
+
+  if(['L05','L06'].includes(s)){
+    const sets=[
+      [['Hund','Katze','Pferd'],'Rose'],[['rot','blau','grün'],'laufen'],
+      [['Montag','Dienstag','Freitag'],'Januar'],[['Apfel','Birne','Pflaume'],'Stuhl'],
+      [['Meter','Zentimeter','Kilometer'],'Liter'],[['Tennis','Fußball','Handball'],'Klavier'],
+      [['Paris','Berlin','Rom'],'Donau'],[['Quadrat','Kreis','Dreieck'],'Banane'],
+      [['Frühling','Sommer','Winter'],'Dienstag'],[['lesen','schreiben','rechnen'],'gelb'],
+      [['Bus','Zug','Fahrrad'],'Küche'],[['Amsel','Adler','Spatz'],'Delfin']
+    ];
+    const x=sets[Math.floor(Math.random()*sets.length)];
+    const opts=z21shuffle([...x[0],x[1]]);
+    return {id:z21id('L'),domain:'Logik',title:'Logik · Ausschluss',
+      question:`Welcher Begriff passt nicht zu den anderen? ${opts.join(' · ')}`,
+      options:opts,answer:opts.indexOf(x[1]),skill:s,difficulty:1,
+      explanation:'Drei Begriffe gehören zu derselben Gruppe.'};
+  }
+
+  if(['L07','L08','L09','L11'].includes(s)){
+    const names=z21shuffle(['Mia','Lea','Zoe','Emma','Lina','Sara','Noah','Finn','Paul','Max']).slice(0,3);
+    const contexts=[
+      [`${names[0]} ist schneller als ${names[1]}. ${names[1]} ist schneller als ${names[2]}. Wer ist am langsamsten?`,names[2]],
+      [`${names[0]} ist älter als ${names[1]}. ${names[1]} ist älter als ${names[2]}. Wer ist am jüngsten?`,names[2]],
+      [`${names[0]} hat mehr Punkte als ${names[1]}. ${names[1]} hat mehr Punkte als ${names[2]}. Wer hat die meisten Punkte?`,names[0]],
+      [`${names[0]} steht vor ${names[1]}. ${names[1]} steht vor ${names[2]}. Wer steht in der Mitte?`,names[1]]
+    ];
+    const x=contexts[Math.floor(Math.random()*contexts.length)];
+    const opts=z21shuffle([...names,'nicht bestimmbar']);
+    return {id:z21id('L'),domain:'Logik',title:'Logik · Schlussfolgern',
+      question:x[0],options:opts,answer:opts.indexOf(x[1]),skill:s,difficulty:1,
+      explanation:'Ordne die Informationen Schritt für Schritt.'};
+  }
+
+  // fallback logic generator
+  const a=2+Math.floor(Math.random()*20), b=2+Math.floor(Math.random()*8);
+  correct=a+4*b; mc=z21mc(correct,[correct+b,correct-b,correct+2]);
+  return {id:z21id('L'),domain:'Logik',title:'Logik · Muster',
+    question:`Welche Zahl folgt? ${a}, ${a+b}, ${a+2*b}, ${a+3*b}, ?`,
+    options:mc.options,answer:mc.answer,skill:s,difficulty:1,
+    explanation:'Suche nach einer gleichbleibenden Regel.'};
+}
+
+/* ---------- MATH: procedural fresh variants ---------- */
+function z21Math(skill){
+  const s=skill||'M08'; let a,b,c,correct,mc;
+  if(['M08','M10','M16','M20','M21','M22','M25'].includes(s)){
+    a=120+Math.floor(Math.random()*780); b=25+Math.floor(Math.random()*260);
+    correct=a+b; mc=z21mc(correct,[correct+10,correct-10,correct+1]);
+    return {id:z21id('M'),domain:'Mathematik',title:'Mathematik · neue Aufgabe',
+      question:`Eine Strecke ist am Vormittag ${a} m und am Nachmittag ${b} m lang. Wie viele Meter sind es insgesamt?`,
+      options:mc.options,answer:mc.answer,skill:s,difficulty:1,
+      explanation:'Addiere beide Strecken.'};
+  }
+  if(['M09','M11'].includes(s)){
+    a=400+Math.floor(Math.random()*600); b=30+Math.floor(Math.random()*250);
+    correct=a-b; mc=z21mc(correct,[correct+10,correct-10,correct+1]);
+    return {id:z21id('M'),domain:'Mathematik',title:'Mathematik · Subtraktion',
+      question:`Von ${a} Punkten werden ${b} abgezogen. Wie viele bleiben?`,
+      options:mc.options,answer:mc.answer,skill:s,difficulty:1,explanation:'Subtrahiere sorgfältig.'};
+  }
+  if(['M12','M13','M14'].includes(s)){
+    a=3+Math.floor(Math.random()*9); b=7+Math.floor(Math.random()*24); correct=a*b;
+    mc=z21mc(correct,[correct+a,correct-a,correct+b]);
+    return {id:z21id('M'),domain:'Mathematik',title:'Mathematik · Multiplikation',
+      question:`${a} Gruppen enthalten jeweils ${b} Karten. Wie viele Karten sind es zusammen?`,
+      options:mc.options,answer:mc.answer,skill:s,difficulty:1,explanation:'Multipliziere Anzahl der Gruppen mit der Anzahl pro Gruppe.'};
+  }
+  return nrMath ? nrMath(s) : null;
+}
+
+/* ---------- DEUTSCH: procedural reading/grammar variants ---------- */
+function z21Deutsch(skill){
+  const s=skill||'D01';
+  if(/^D(0[1-9]|1[0-9]|2[0-3])$/.test(s)){
+    const who=z21shuffle(['eine Klasse','Alicia und ihre Freunde','die Kinder der 5. Klasse','eine Sportgruppe'])[0];
+    const place=z21shuffle(['Bibliothek','Sporthalle','Schulgarten','Naturpark','Museum','Schulhof'])[0];
+    const day=z21shuffle(['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'])[0];
+    const activity=z21shuffle(['vergleichen ihre Ergebnisse','schreiben eine kurze Zusammenfassung','besprechen ihre Beobachtungen','ordnen ihre Notizen'])[0];
+    const text=`Am ${day} besucht ${who} die ${place}. Zuerst arbeiten alle in kleinen Gruppen. Nach einer kurzen Pause ${activity}. Danach stellen zwei Gruppen ihre Ergebnisse vor.`;
+    const correct=activity.charAt(0).toUpperCase()+activity.slice(1)+'.';
+    const opts=z21shuffle([correct,'Sie fahren sofort nach Hause.','Sie beginnen mit dem Mittagessen.','Sie bekommen keine Aufgabe.']);
+    return {id:z21id('D'),domain:'Deutsch',title:'Deutsch · Lesen',
+      question:`${text}\n\nWas passiert nach der Pause?`,options:opts,answer:opts.indexOf(correct),
+      skill:s,difficulty:1,explanation:'Suche die passende Information im Text.'};
+  }
+  const grammar=[
+    ['Welches Wort ist ein Nomen?',['Abenteuer','entdecken','mutig','unter'],'Abenteuer'],
+    ['Welches Wort ist ein Verb?',['beobachten','Fernglas','spannend','das'],'beobachten'],
+    ['Welches Wort ist ein Adjektiv?',['neugierig','forschen','Schule','die'],'neugierig'],
+    ['Welcher Artikel passt zu „Bibliothek“?',['die','der','das','den'],'die'],
+    ['Was ist der Infinitiv von „schrieb“?',['schreiben','schrieb','geschrieben','schreibt'],'schreiben'],
+    ['Welche Form steht im Perfekt?',['wir haben gelernt','wir lernen','wir lernten','wir werden lernen'],'wir haben gelernt'],
+    ['Welche Form steht im Präteritum?',['sie spielte','sie spielt','sie hat gespielt','sie wird spielen'],'sie spielte']
+  ];
+  const x=grammar[Math.floor(Math.random()*grammar.length)];
+  const opts=z21shuffle(x[1]);
+  return {id:z21id('D'),domain:'Deutsch',title:'Deutsch · Grammatik',
+    question:x[0],options:opts,answer:opts.indexOf(x[2]),skill:s,difficulty:1,explanation:'Wende die passende Grammatikregel an.'};
+}
+
+function z21GenerateFor(skill){
+  let e=null;
+  if(String(skill).startsWith('L')) e=z21Logic(skill);
+  else if(String(skill).startsWith('M')) e=z21Math(skill);
+  else if(String(skill).startsWith('D')) e=z21Deutsch(skill);
+  if(e && Array.isArray(EXERCISES)) EXERCISES.push(e);
+  return e;
+}
+
+/* Returns n globally unseen questions for the requested skill/domain. */
+function z21Fresh(skill,n){
+  const seen=z21seenSet(), local=new Set(), out=[];
+  const fixed=(EXERCISES||[]).filter(e=>!skill || e.skill===skill);
+  for(const e of z21shuffle(fixed)){
+    const s=z21sig(e);
+    if(s && !seen.has(s) && !local.has(s)){
+      out.push(e); local.add(s);
+      if(out.length>=n) break;
+    }
+  }
+  let guard=0;
+  while(out.length<n && guard++<1500){
+    const e=z21GenerateFor(skill); if(!e)continue;
+    const s=z21sig(e);
+    if(s && !seen.has(s) && !local.has(s)){
+      out.push(e); local.add(s);
+    }
+  }
+  out.forEach(z21remember);
+  return out.slice(0,n);
+}
+
+/* GLOBAL SESSION GUARD:
+   Any session opened anywhere in the app is deduplicated before display.
+   If all supplied questions were already seen, fresh variants are generated. */
+const z21OriginalStartSession = window.startSession;
+window.startSession=function(list,boxId,kind){
+  let incoming=(list||[]).filter(Boolean);
+  const seen=z21seenSet(), local=new Set();
+  let fresh=incoming.filter(e=>{
+    const s=z21sig(e);
+    if(!s || seen.has(s) || local.has(s)) return false;
+    local.add(s); return true;
+  });
+
+  const wanted=Math.max(1,incoming.length||8);
+  const skill=(incoming.find(e=>e&&e.skill)||{}).skill ||
+              (state.currentDailyStep&&state.currentDailyStep.skill) || null;
+
+  let guard=0;
+  while(fresh.length<wanted && skill && guard++<1000){
+    const e=z21GenerateFor(skill); if(!e)continue;
+    const s=z21sig(e);
+    if(s && !seen.has(s) && !local.has(s)){fresh.push(e);local.add(s);}
+  }
+
+  // If a mixed session has no single skill, fill from its represented skills.
+  if(fresh.length<wanted){
+    const skills=[...new Set(incoming.map(e=>e&&e.skill).filter(Boolean))];
+    let k=0;
+    while(fresh.length<wanted && skills.length && k++<1200){
+      const sk=skills[k%skills.length], e=z21GenerateFor(sk); if(!e)continue;
+      const s=z21sig(e);
+      if(s && !seen.has(s) && !local.has(s)){fresh.push(e);local.add(s);}
+    }
+  }
+
+  if(!fresh.length){
+    const box=document.getElementById(boxId);
+    if(box) box.innerHTML='<div class="notice warn"><strong>Neue Fragen werden vorbereitet.</strong><br>Diese Serie enthält keine Wiederholung. Bitte starte sie noch einmal.</div>';
+    return;
+  }
+  fresh.forEach(z21remember);
+  return z21OriginalStartSession(fresh,boxId,kind);
+};
+
+/* LOGIK direct access: force a fresh 8-question set instead of old fixed bank. */
+window.startLogicV1021=function(skill,n=8){
+  const pack=z21Fresh(skill||'L01',n);
+  z21OriginalStartSession(pack,'v10Exercise','training');
+  showScreen('runner');
+};
+
+/* Patch common onclick patterns for Logik buttons after render:
+   buttons that expose a data-skill Lxx use the new engine. */
+function z21PatchLogicButtons(){
+  document.querySelectorAll('[data-skill^="L"]').forEach(btn=>{
+    if(btn.dataset.z21patched)return;
+    const sk=btn.dataset.skill;
+    btn.dataset.z21patched='1';
+    btn.addEventListener('click',function(ev){
+      if(!sk)return;
+      // Capture only explicit training buttons; navigation buttons remain untouched.
+      const txt=(btn.textContent||'').toLowerCase();
+      if(/start|train|üben|serie|fragen/.test(txt)){
+        ev.preventDefault(); ev.stopImmediatePropagation();
+        startLogicV1021(sk,8);
+      }
+    },true);
+  });
+}
+setInterval(z21PatchLogicButtons,700);
+
+/* Import history from previous V10.20 anti-repeat memory so upgrading
+   does NOT forget questions Alicia has already seen. */
+(function z21ImportOldHistory(){
+  const old=(state.v1020NoRepeat&&state.v1020NoRepeat.globalRecent)||[];
+  const all=state.v1021NoRepeat.shownSignatures;
+  old.forEach(s=>{if(s&&!all.includes(s))all.push(s)});
   saveSilent();
 })();
 </script>
