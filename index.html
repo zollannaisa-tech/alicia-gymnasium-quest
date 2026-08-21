@@ -200,6 +200,25 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <meta name="application-name" content="Alicia Gymnasium Quest">
 <meta property="og:image" content="alicia-gymnasium-icon-v1020.png?v=1020">
 
+
+<style id="v1020-final-ux">
+/* V10.20 final UX — HEUTE first */
+.v1020-heute{
+  background:linear-gradient(135deg,#4c1d95,#1d4ed8)!important;
+  border:2px solid #8b5cf6!important;
+  box-shadow:0 10px 28px rgba(79,70,229,.28);
+}
+.v1020-heute .v1019-nav-head{font-size:17px;padding:15px 13px;background:transparent}
+.v1020-heute .v1019-help{color:#e0e7ff;font-size:12px}
+.v1020-purpose{display:block;font-size:10px;color:#aab2ca;margin-top:2px;line-height:1.25}
+.v1020-heute .v1020-purpose{color:#dbeafe}
+.v1020-audio{border:0;border-radius:999px;padding:5px 8px;cursor:pointer;background:#26304f;color:white;font-size:12px;margin-left:5px}
+.v1020-welcome{background:linear-gradient(135deg,#2e245c,#19365c);border:1px solid #6659d9;border-radius:16px;padding:14px;margin:12px 0}
+.v1020-welcome h3{margin:0 0 5px}
+.v1020-bonus-ready{border-color:#fbbf24!important;box-shadow:0 0 0 2px rgba(251,191,36,.15)}
+.v1020-bonus-lock{opacity:.68}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -5269,6 +5288,164 @@ function decorateTodayV1020(){const p=document.querySelector('#todayplan>p.muted
 const oldShowV1020=showScreen;showScreen=function(id){oldShowV1020(id);if(id==='programv1020')renderProgramTrackerV1020();if(id==='parents')renderProgramTrackerV1020()};
 ensureProgramTrackerV1020();decorateHomeV1020();decorateTodayV1020();renderSimpleNavV1020();updateGauges();
 setTimeout(()=>{decorateHomeV1020();decorateTodayV1020();renderSimpleNavV1020();renderProgramTrackerV1020();updateGauges();renderStructuredDaily();},600);
+</script>
+
+
+<script id="v1020-final-ux-script">
+/* ===== V10.20 FINAL: HEUTE + clear purposes + audio guidance ===== */
+state.v1020ux=state.v1020ux||{audioWelcomeDates:{}};
+
+const V1020_HELP={
+ todayplan:{
+  label:'🎯 Mein Tagesplan',
+  desc:'Jeden Tag zuerst: 60 Minuten. Die App wählt Lernen, Üben, Wiederholen und neue Themen für dich.',
+  speech:'Das ist dein Training für heute. Ich wähle für dich aus, was du lernen, üben und wiederholen sollst. Du musst nur auf Start drücken.'
+ },
+ bonusplay:{
+  label:'⭐ Bonus-Missionen',
+  desc:'Nach 60 Minuten empfohlen: Die App wählt dein bestes Extra-Training. Extra-Minuten + Extra-XP.',
+  speech:'Sechzig Minuten geschafft? Super! Wenn du noch Lust hast, wähle ich dein bestes Extra-Training für dich aus.'
+ },
+ lessons:{
+  label:'📚 Lernen',
+  desc:'Du willst etwas Neues lernen oder besser verstehen? Hier findest du Erklärungen und Lektionen.',
+  speech:'Hier lernst du etwas Neues oder verstehst etwas besser. Du findest Erklärungen, Beispiele und Lektionen.'
+ },
+ longseries:{
+  label:'🎯 Trainieren',
+  desc:'Du weißt schon, was du üben möchtest? Hier wählst du dein freies Training selbst.',
+  speech:'Hier trainierst du frei. Wenn du schon weißt, was du üben möchtest, kannst du dein Training selbst auswählen.'
+ },
+ weeklycheck:{
+  label:'🧪 Wochen-Check',
+  desc:'Einmal pro Woche: prüfen, was schon sicher sitzt und was noch trainiert werden muss.',
+  speech:'Einmal pro Woche prüfst du hier deinen Fortschritt. Danach weiß die App noch besser, was du als Nächstes brauchst.'
+ }
+};
+
+window.speakV1020=function(text){
+ try{
+   if(!('speechSynthesis' in window))return;
+   speechSynthesis.cancel();
+   const u=new SpeechSynthesisUtterance(text);
+   u.lang='de-DE'; u.rate=.92; u.pitch=1.05;
+   speechSynthesis.speak(u);
+ }catch(e){}
+};
+
+function realMinutesV1020(){
+ try{return Math.max(0,Number(totalCreditedMinutesV1017()||0))}catch(e){return Math.max(0,Number(state.dailyPath.activityMinutes[today()]||0))}
+}
+
+function renderMenuV1020(){
+ const nav=document.getElementById('nav'); if(!nav)return;
+ const min=realMinutesV1020(), bonusReady=min>=60;
+ const groups=[
+  {id:'today',icon:'✨',title:'HEUTE',help:'Hier startest du jeden Tag.',open:true,cls:'v1020-heute',
+   items:[
+    ['todayplan','🎯','MEIN TAGESPLAN','Jeden Tag zuerst · 60 echte Minuten'],
+    ['bonusplay','⭐','BONUS-MISSIONEN',bonusReady?'60 Min geschafft? Dein bestes Extra-Training wartet!':'Nach dem Tagesplan · freiwillig · Extra-XP']
+   ]},
+  {id:'learn',icon:'📚',title:'LERNEN',help:'Ich möchte etwas Neues lernen oder verstehen.',items:[
+    ['lessons','📘','Lernen','Erklärungen · Beispiele · neue Themen'],
+    ['deutsch','🇩🇪','Deutsch','Lesen · Grammatik · Rechtschreibung'],
+    ['mathe','🔢','Mathematik','Mathe auf Deutsch verstehen'],
+    ['logik','🧠','Logik','Denkwege verstehen'],
+    ['vocab','📚','Wortschatz','Neue Wörter lernen'],
+    ['writing','✍️','Schreiben','Texte schreiben lernen'],
+    ['dictation','🎧','Diktat','Hören und richtig schreiben'],
+    ['longreading','📖','Lesen','Längere Texte verstehen']
+   ]},
+  {id:'train',icon:'🎯',title:'TRAINIEREN',help:'Ich weiß, was ich üben möchte, und wähle selbst.',items:[
+    ['longseries','🏋️','Freies Training','Ich wähle selbst, was ich üben möchte'],
+    ['boss','👑','Boss Tests','Challenge gegen die Uhr'],
+    ['testcenter','🎯','Potenzialtest Training','Prüfungsaufgaben üben'],
+    ['startklar','🚀','Startklar Klasse 6','Für den Gymnasium-Alltag üben'],
+    ['resources','🌐','Ressourcen','Zusätzliche Lernhilfen'],
+    ['books','📚','Romane','Lesen und zusammenfassen'],
+    ['projects','🔎','Projekte','Recherchieren und präsentieren']
+   ]},
+  {id:'progress',icon:'🏆',title:'MEIN FORTSCHRITT',help:'Ich sehe, was ich schon kann und was noch kommt.',items:[
+    ['roadmapplus','🗺️','Mein Weg zum Gymnasium','Fortschritt im Programm'],
+    ['roadmap','📅','Roadmap Monate','Was kommt als Nächstes?'],
+    ['coverage','✅','Kompetenzen','Gelernt · getestet · sicher'],
+    ['stats','📈','Statistik','Meine Ergebnisse'],
+    ['league','🏆','Liga','Spielerische XP-Liga'],
+    ['trophies','🎖️','Trophäen','Meine Erfolge'],
+    ['weeklycheck','🧪','Wochen-Check','1× pro Woche meinen Fortschritt prüfen']
+   ]},
+  {id:'parent',icon:'🔐',title:'ELTERN / COACH',help:'Details, Steuerung und adaptive Analyse.',items:[
+    ['parents','🔐','Elternbereich','Programm und Einstellungen'],
+    ['matrix','📊','Programm-Matrix','Alle Kompetenzen kontrollieren'],
+    ['bank','🗃️','Aufgabenbank','Alle Aufgaben'],
+    ['t0','🏕️','T0 Archiv','Ausgangsdaten ansehen'],
+    ['t0tests','🧪','T0 Ergebnisse','Diagnose nur als Referenz'],
+    ['jokerstats','🃏','Joker','Hilfen und Nutzung'],
+    ['freeanswer','🧠','Freie Antworten','Erweiterte Übungen']
+   ]}
+ ];
+ nav.innerHTML=groups.map(g=>`<div class="v1019-nav-group ${g.open?'open':''} ${g.cls||''}" data-group="${g.id}">
+   <button class="v1019-nav-head" onclick="toggleV1019Group('${g.id}')">${g.icon} ${g.title}</button>
+   <div class="v1019-help">${g.help}${g.id==='learn'?` <button class="v1020-audio" onclick="event.stopPropagation();speakV1020('${V1020_HELP.lessons.speech.replace(/'/g,"\\'")}')">🔊</button>`:''}${g.id==='train'?` <button class="v1020-audio" onclick="event.stopPropagation();speakV1020('${V1020_HELP.longseries.speech.replace(/'/g,"\\'")}')">🔊</button>`:''}</div>
+   <div class="v1019-nav-items">${g.items.map(p=>`<button data-page="${p[0]}" class="${p[0]==='bonusplay'?(bonusReady?'v1020-bonus-ready':'v1020-bonus-lock'):''}" onclick="showScreen('${p[0]}')"><span>${p[1]} ${p[2]}</span><span class="v1020-purpose">${p[3]}</span></button>`).join('')}</div>
+ </div>`).join('');
+}
+
+function addPageGuideV1020(id,key){
+ const sec=document.getElementById(id), h=V1020_HELP[key]; if(!sec||!h)return;
+ let box=sec.querySelector('.v1020-welcome');
+ if(!box){
+   box=document.createElement('div');box.className='v1020-welcome';
+   const first=sec.querySelector('h1');
+   if(first)first.insertAdjacentElement('afterend',box); else sec.prepend(box);
+ }
+ box.innerHTML=`<h3>${h.label} <button class="v1020-audio" onclick="speakV1020(${JSON.stringify(h.speech)})">🔊 Anhören</button></h3><div>${h.desc}</div>`;
+}
+
+function dailyAudioWelcomeV1020(){
+ const key=today();
+ if(state.v1020ux.audioWelcomeDates[key])return;
+ state.v1020ux.audioWelcomeDates[key]=true; saveSilent();
+ setTimeout(()=>speakV1020('Hallo Alicia! Dein Tagesplan ist bereit. Heute arbeitest du sechzig Minuten. Ich wähle die Aufgaben für dich aus und passe sie an deinen Fortschritt an. Du musst nur auf Start drücken. Viel Spaß!'),500);
+}
+
+const oldShowV1020=showScreen;
+showScreen=function(id){
+ oldShowV1020(id);
+ renderMenuV1020();
+ if(id==='todayplan'){addPageGuideV1020('todayplan','todayplan');dailyAudioWelcomeV1020();}
+ if(id==='bonusplay')addPageGuideV1020('bonusplay','bonusplay');
+ if(id==='lessons')addPageGuideV1020('lessons','lessons');
+ if(id==='longseries')addPageGuideV1020('longseries','longseries');
+ if(id==='weeklycheck')addPageGuideV1020('weeklycheck','weeklycheck');
+};
+
+/* Remove any remaining diagnostic prompt from Home. T0 stays only in Parents/Coach. */
+function purgeDiagnosticHomeV1020(){
+ const home=document.getElementById('home');if(!home)return;
+ home.querySelectorAll('*').forEach(el=>{
+   const txt=(el.textContent||'').trim();
+   if((/Étape 1\s*:\s*diagnostic de départ/i.test(txt)||/diagnostic de départ/i.test(txt)) &&
+      !el.closest('#weeklyHomeV1019') && el.children.length<8){
+      const card=el.closest('.card,.quest');
+      if(card && home.contains(card))card.remove();
+   }
+ });
+ const injected=document.getElementById('v1019StartGuide');if(injected)injected.remove();
+}
+
+/* Add audio guide to main optional areas, without autoplay. */
+function installGuidesV1020(){
+ addPageGuideV1020('todayplan','todayplan');
+ addPageGuideV1020('bonusplay','bonusplay');
+ addPageGuideV1020('lessons','lessons');
+ addPageGuideV1020('longseries','longseries');
+ addPageGuideV1020('weeklycheck','weeklycheck');
+ purgeDiagnosticHomeV1020();
+ renderMenuV1020();
+}
+installGuidesV1020();
+setTimeout(installGuidesV1020,600);
 </script>
 
 </body></html>
