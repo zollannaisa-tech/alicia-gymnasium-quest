@@ -5448,4 +5448,277 @@ installGuidesV1020();
 setTimeout(installGuidesV1020,600);
 </script>
 
+
+<script id="v1020-norepeat-engine">
+/* ===== V10.20 HOTFIX — ZERO REPEAT TAGESPLAN ===== */
+state.v1020NoRepeat = state.v1020NoRepeat || {
+  byDate:{},          // signatures réellement montrées par jour
+  globalRecent:[],    // mémoire longue anti-répétition
+  generatedCounter:0
+};
+
+function nrToday(){ return today(); }
+function nrDateOffset(days){
+  const d=new Date(); d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function nrSig(e){
+  return String((e&&e.question)||'')
+    .toLowerCase()
+    .replace(/\s+/g,' ')
+    .replace(/[„“"'’`]/g,'')
+    .trim();
+}
+function nrBucket(date){
+  state.v1020NoRepeat.byDate[date]=state.v1020NoRepeat.byDate[date]||[];
+  return state.v1020NoRepeat.byDate[date];
+}
+function nrForbiddenSet(){
+  const dates=[nrToday(),nrDateOffset(-1),nrDateOffset(-2)];
+  const s=new Set();
+  dates.forEach(d=>(state.v1020NoRepeat.byDate[d]||[]).forEach(x=>s.add(x)));
+  // mémoire longue : évite aussi les retours récents au-delà de J-2
+  (state.v1020NoRepeat.globalRecent||[]).slice(-1200).forEach(x=>s.add(x));
+  return s;
+}
+function nrRemember(e){
+  const sig=nrSig(e); if(!sig)return;
+  const t=nrBucket(nrToday());
+  if(!t.includes(sig))t.push(sig);
+  const g=state.v1020NoRepeat.globalRecent;
+  const i=g.indexOf(sig); if(i>=0)g.splice(i,1);
+  g.push(sig);
+  if(g.length>1600)state.v1020NoRepeat.globalRecent=g.slice(-1600);
+  saveSilent();
+}
+function nrUnique(arr){
+  const seen=new Set(), forbidden=nrForbiddenSet();
+  return (arr||[]).filter(e=>{
+    const s=nrSig(e);
+    if(!s||seen.has(s)||forbidden.has(s))return false;
+    seen.add(s); return true;
+  });
+}
+function nrNewId(prefix='NR'){
+  state.v1020NoRepeat.generatedCounter++;
+  return prefix+'-'+Date.now()+'-'+state.v1020NoRepeat.generatedCounter+'-'+Math.floor(Math.random()*1e6);
+}
+
+/* ---------------- GENERATEURS DE NOUVELLES VARIANTES ---------------- */
+function nrLogic(skill){
+  let e;
+  if(skill==='L01'||skill==='L12'){
+    const start=3+Math.floor(Math.random()*25), step=2+Math.floor(Math.random()*8);
+    const arr=[start,start+step,start+2*step,start+3*step], ans=start+4*step;
+    e={id:nrNewId('L'),domain:'Logik',title:'Logik · Zahlenfolge',
+       question:`Welche Zahl folgt? ${arr.join(', ')}, ...`,
+       options:[ans,ans+step,ans-1,ans+step+1].sort(()=>Math.random()-.5),
+       skill,difficulty:1,explanation:'Die Differenz bleibt gleich.'};
+    e.answer=e.options.indexOf(ans);
+    return e;
+  }
+  if(skill==='L03'){
+    const sets=[
+      ['Auge','sehen','Ohr','hören'],['Nase','riechen','Zunge','schmecken'],
+      ['Vogel','fliegen','Fisch','schwimmen'],['Stift','schreiben','Schere','schneiden'],
+      ['Buch','lesen','Musik','hören'],['Biene','Honig','Kuh','Milch'],
+      ['Winter','kalt','Sommer','warm'],['Hand','Handschuh','Fuß','Schuh']
+    ];
+    const x=sets[Math.floor(Math.random()*sets.length)];
+    return {id:nrNewId('L'),domain:'Logik',title:'Logik · Analogie',
+      question:`${x[0]} : ${x[1]} = ${x[2]} : ...`,
+      options:[x[3],'Tisch','laufen','blau'],answer:0,skill,difficulty:1,explanation:'Übertrage dieselbe Beziehung.'};
+  }
+  if(skill==='L05'){
+    const sets=[
+      ['Hund','Katze','Pferd','Rose'],['rot','blau','grün','laufen'],
+      ['Montag','Dienstag','Freitag','Januar'],['Apfel','Birne','Pflaume','Stuhl'],
+      ['Meter','Zentimeter','Kilometer','Liter'],['Tennis','Fußball','Handball','Klavier']
+    ];
+    const x=sets[Math.floor(Math.random()*sets.length)];
+    return {id:nrNewId('L'),domain:'Logik',title:'Logik · Ausschluss',
+      question:`Was passt nicht? ${x.join(' – ')}`,options:x,answer:3,skill,difficulty:1,
+      explanation:'Drei Begriffe gehören zusammen.'};
+  }
+  if(skill==='L09'){
+    const names=[['Anna','Ben','Carla'],['Mia','Lea','Zoe'],['Tom','Noah','Luis'],['Lina','Emma','Sara'],['Paul','Finn','Max']];
+    const x=names[Math.floor(Math.random()*names.length)];
+    return {id:nrNewId('L'),domain:'Logik',title:'Logik · Deduktion',
+      question:`${x[0]} ist älter als ${x[1]}. ${x[1]} ist älter als ${x[2]}. Wer ist am jüngsten?`,
+      options:[x[2],x[1],x[0],'nicht bestimmbar'],answer:0,skill,difficulty:1,
+      explanation:'Ordne die Aussagen Schritt für Schritt.'};
+  }
+  if(typeof genLogicV10==='function'){ e=genLogicV10(skill); if(e){e.id=nrNewId('L');e.skill=skill;return e;} }
+  return null;
+}
+
+function nrMath(skill){
+  let a,b,ans,e;
+  if(['M08','M10'].includes(skill)){
+    a=100+Math.floor(Math.random()*800); b=20+Math.floor(Math.random()*180); ans=a+b;
+    e={id:nrNewId('M'),domain:'Mathematik',title:'Mathematik · Addition',
+       question:`${a} + ${b} = ?`,options:[ans,ans+10,ans-10,ans+1],answer:0,skill,difficulty:1,
+       explanation:'Rechne sorgfältig und kontrolliere dein Ergebnis.'}; return e;
+  }
+  if(['M09','M11'].includes(skill)){
+    a=300+Math.floor(Math.random()*700); b=20+Math.floor(Math.random()*Math.min(250,a-1)); ans=a-b;
+    e={id:nrNewId('M'),domain:'Mathematik',title:'Mathematik · Subtraktion',
+       question:`${a} − ${b} = ?`,options:[ans,ans+10,ans-10,ans+1],answer:0,skill,difficulty:1,
+       explanation:'Rechne sorgfältig und kontrolliere dein Ergebnis.'}; return e;
+  }
+  if(['M12','M13'].includes(skill)){
+    a=3+Math.floor(Math.random()*9); b=12+Math.floor(Math.random()*38); ans=a*b;
+    return {id:nrNewId('M'),domain:'Mathematik',title:'Mathematik · Multiplikation',
+      question:`${a} · ${b} = ?`,options:[ans,ans+a,ans-a,ans+b],answer:0,skill,difficulty:1,explanation:'Multipliziere Schritt für Schritt.'};
+  }
+  if(skill==='M14'){
+    b=3+Math.floor(Math.random()*9); ans=4+Math.floor(Math.random()*18); a=b*ans;
+    return {id:nrNewId('M'),domain:'Mathematik',title:'Mathematik · Division',
+      question:`${a} : ${b} = ?`,options:[ans,ans+1,ans-1,ans+2],answer:0,skill,difficulty:1,explanation:'Division ist die Umkehrung der Multiplikation.'};
+  }
+  if(['M16','M20','M21','M22','M25'].includes(skill)){
+    const boxes=3+Math.floor(Math.random()*7), each=4+Math.floor(Math.random()*9), used=Math.floor(Math.random()*Math.min(8,boxes*each));
+    ans=boxes*each-used;
+    return {id:nrNewId('M'),domain:'Mathematik',title:'Mathematik · Sachaufgabe',
+      question:`In ${boxes} Kisten liegen jeweils ${each} Tennisbälle. ${used} Bälle werden benutzt. Wie viele Bälle bleiben übrig?`,
+      options:[ans,boxes*each,ans+each,Math.max(0,ans-used)],answer:0,skill,difficulty:2,
+      explanation:'Erst multiplizieren, dann die benutzten Bälle abziehen.'};
+  }
+  if(['M43','M47','M48'].includes(skill)){
+    const h=8+Math.floor(Math.random()*9), m=[0,5,10,15,20,25,30,35,40][Math.floor(Math.random()*9)];
+    const dur=[25,35,45,55,65,75,85][Math.floor(Math.random()*7)];
+    const total=h*60+m+dur, eh=Math.floor(total/60)%24, em=total%60;
+    const correct=`${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')} Uhr`;
+    return {id:nrNewId('M'),domain:'Mathematik',title:'Mathematik · Zeit',
+      question:`Das Training beginnt um ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} Uhr und dauert ${dur} Minuten. Wann endet es?`,
+      options:[correct,`${String(eh).padStart(2,'0')}:${String((em+10)%60).padStart(2,'0')} Uhr`,`${String((eh+1)%24).padStart(2,'0')}:${String(em).padStart(2,'0')} Uhr`,`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} Uhr`],
+      answer:0,skill,difficulty:2,explanation:'Addiere die Dauer zur Startzeit.'};
+  }
+  if(typeof genMath==='function'){e=genMath();if(e){e.id=nrNewId('M');e.skill=skill;return e;}}
+  return null;
+}
+
+function nrDeutsch(skill){
+  let e;
+  const pools={
+    D45:[['Welches Wort ist ein Nomen?',['Schule','laufen','schnell','unter'],0],['Welches Wort ist ein Nomen?',['Freude','springen','leise','mit'],0],['Welches Wort ist ein Nomen?',['Training','spielen','gut','auf'],0]],
+    D46:[['Welches Wort ist ein Verb?',['laufen','Ball','schnell','der'],0],['Welches Wort ist ein Verb?',['lernen','Schule','schön','eine'],0],['Welches Wort ist ein Verb?',['rechnen','Heft','leise','das'],0]],
+    D47:[['Welches Wort ist ein Adjektiv?',['schnell','laufen','Ball','der'],0],['Welches Wort ist ein Adjektiv?',['mutig','spielen','Kind','ein'],0],['Welches Wort ist ein Adjektiv?',['ruhig','lernen','Buch','die'],0]],
+    D48:[['Welcher Artikel passt? ___ Schule',['die','der','das','den'],0],['Welcher Artikel passt? ___ Buch',['das','die','der','den'],0],['Welcher Artikel passt? ___ Ball',['der','die','das','den'],0]],
+    D54:[['Was ist der Infinitiv von „ging“?',['gehen','gingen','gegangen','geht'],0],['Was ist der Infinitiv von „lief“?',['laufen','liefen','gelaufen','läuft'],0],['Was ist der Infinitiv von „sah“?',['sehen','sieht','gesehen','sahen'],0]],
+    D61:[['Welche Form steht im Präsens?',['ich spiele','ich spielte','ich habe gespielt','ich werde spielen'],0],['Welche Form steht im Präsens?',['wir lernen','wir lernten','wir haben gelernt','wir werden lernen'],0]],
+    D62:[['Welche Form steht im Präteritum?',['ich spielte','ich spiele','ich habe gespielt','ich werde spielen'],0],['Welche Form steht im Präteritum?',['sie lief','sie läuft','sie ist gelaufen','sie wird laufen'],0]],
+    D63:[['Welche Form steht im Perfekt?',['ich habe gespielt','ich spiele','ich spielte','ich werde spielen'],0],['Welche Form steht im Perfekt?',['sie ist gelaufen','sie läuft','sie lief','sie wird laufen'],0]],
+    D75:[['Welcher Satz ist richtig?',['Ich bleibe zu Hause, weil ich müde bin.','Ich bleibe zu Hause, weil bin ich müde.','Weil ich bin müde, bleibe ich zu Hause.','Ich weil müde bin bleibe zu Hause.'],0],
+         ['Welcher Satz ist richtig?',['Ich lerne, weil ich morgen einen Test habe.','Ich lerne, weil ich habe morgen einen Test.','Weil ich habe morgen einen Test, ich lerne.','Ich weil lerne morgen Test.'],0]],
+    D82:[['Welcher Satz ist richtig geschrieben?',['Morgen gehen wir in die Schule.','morgen gehen wir in die Schule.','Morgen gehen Wir in die schule.','morgen Gehen wir in die Schule.'],0],
+         ['Welcher Satz ist richtig geschrieben?',['Heute spielt Alicia Tennis.','heute spielt Alicia tennis.','Heute Spielt alicia Tennis.','heute Spielt Alicia tennis.'],0]]
+  };
+  if(pools[skill]){
+    const x=pools[skill][Math.floor(Math.random()*pools[skill].length)];
+    return {id:nrNewId('D'),domain:'Deutsch',title:'Deutsch · neue Aufgabe',question:x[0],options:x[1],answer:x[2],skill,difficulty:1,explanation:'Achte auf die Regel.'};
+  }
+  if(skill && skill.startsWith('D1') && Number(skill.slice(1))<=23){
+    const places=['Schulgarten','Sporthalle','Bibliothek','Schulhof','Naturpark'];
+    const p=places[Math.floor(Math.random()*places.length)];
+    const n=2+Math.floor(Math.random()*6);
+    return {id:nrNewId('D'),domain:'Deutsch',title:'Deutsch · Lesen',
+      question:`Am Dienstag besucht eine Klasse den ${p}. Die Kinder arbeiten dort in kleinen Gruppen. Jede Gruppe bekommt ${n} Aufgaben. Nach der Pause vergleichen alle ihre Ergebnisse.\n\nWas machen die Kinder nach der Pause?`,
+      options:['Sie vergleichen ihre Ergebnisse.','Sie fahren sofort nach Hause.','Sie bekommen keine Aufgaben.','Sie schlafen.'],
+      answer:0,skill,difficulty:1,explanation:'Suche die Information direkt im Text.'};
+  }
+  if(typeof genDeutsch==='function'){e=genDeutsch();if(e){e.id=nrNewId('D');e.skill=skill;return e;}}
+  return null;
+}
+
+function nrGenerate(skill){
+  let e=null;
+  if(!skill)return null;
+  if(skill.startsWith('L'))e=nrLogic(skill);
+  else if(skill.startsWith('M'))e=nrMath(skill);
+  else if(skill.startsWith('D'))e=nrDeutsch(skill);
+  if(e && !EXERCISES.some(x=>x.id===e.id))EXERCISES.push(e);
+  return e;
+}
+
+function nrFreshPack(skill,n=8){
+  const forbidden=nrForbiddenSet(), out=[], seen=new Set();
+  // 1. Questions fixes jamais vues récemment
+  const pool=(EXERCISES||[]).filter(e=>e.skill===skill).sort(()=>Math.random()-.5);
+  for(const e of pool){
+    const s=nrSig(e);
+    if(s && !forbidden.has(s) && !seen.has(s)){out.push(e);seen.add(s);}
+    if(out.length>=n)break;
+  }
+  // 2. Générer autant de variantes nouvelles que nécessaire
+  let guard=0;
+  while(out.length<n && guard++<500){
+    const e=nrGenerate(skill); if(!e)continue;
+    const s=nrSig(e);
+    if(s && !forbidden.has(s) && !seen.has(s)){out.push(e);seen.add(s);}
+  }
+  // 3. Marquer immédiatement comme réservées pour aujourd'hui
+  out.forEach(nrRemember);
+  return out.slice(0,n);
+}
+
+/* Tagesplan: démarre toujours avec un lot FRAIS. */
+const nrOldStartDailyStep = window.startDailyStep;
+window.startDailyStep=function(id,action,skill,min){
+  const ds=getDailyState(); if(ds.steps[id])return;
+  state.currentDailyStep={id,action,skill,min:Number(min)||0,date:today()};
+  if(skill){
+    const pack=nrFreshPack(skill,10);
+    if(!pack.length){alert('Neue Fragen werden vorbereitet. Bitte den Block noch einmal starten.');return;}
+    const title=document.getElementById('v10RunnerTitle');
+    const sub=document.getElementById('v10RunnerSub');
+    if(title)title.textContent='🎯 '+(COMPETENCES.find(c=>c.id===skill)?.label||'Tagestraining');
+    if(sub)sub.textContent=`${min} echte Minuten · heute nur neue Fragen`;
+    startSession(pack,'v10Exercise','daily-step');showScreen('runner');return;
+  }
+  showScreen(action||'todayplan');
+};
+
+/* Quand un lot est fini avant le temps prévu, injecter immédiatement de nouvelles questions. */
+const nrOldFinish = window.finishSession;
+window.finishSession=function(){
+  if(state.session && state.session.kind==='daily-step' && state.currentDailyStep){
+    const cur={...state.currentDailyStep};
+    const boxId=state.session.boxId;
+    const pct=state.session.ids.length?Math.round(100*state.session.correct/state.session.ids.length):0;
+    // on ferme le lot courant sans valider le bloc si le temps n'est pas atteint
+    state.session=null; saveSilent();
+
+    let sec=0;
+    try{
+      const k=today();
+      sec=(state.v1018&&state.v1018.stepSeconds&&state.v1018.stepSeconds[k]&&state.v1018.stepSeconds[k][cur.id])||0;
+    }catch(e){}
+    // fallback avec temps réel global si l'ancien compteur par étape n'existe pas
+    const goal=(Number(cur.min)||0)*60;
+    if(sec < goal){
+      const next=nrFreshPack(cur.skill,10);
+      const box=document.getElementById(boxId);
+      if(box)box.innerHTML=`<h2>✅ Serie geschafft · ${pct}%</h2><p class="muted">Du bist schneller als die Zielzeit. Jetzt kommen 10 neue Fragen – keine Wiederholung.</p>`;
+      setTimeout(()=>{startSession(next,boxId,'daily-step');showScreen('runner');},250);
+      return;
+    }
+    if(typeof completeCurrentDailyStep==='function')completeCurrentDailyStep();
+    return;
+  }
+  nrOldFinish();
+};
+
+/* Daily/bonus questions also use anti-repeat memory where possible */
+window.startLogicFreshV1018=function(skill,n){const p=nrFreshPack(skill,n);startSession(p,'v10Exercise','training');showScreen('runner');};
+
+/* Clean old stored repeats older than 45 days to keep localStorage small */
+(function nrCleanup(){
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-45);
+  const cs=cutoff.toISOString().slice(0,10);
+  Object.keys(state.v1020NoRepeat.byDate).forEach(d=>{if(d<cs)delete state.v1020NoRepeat.byDate[d]});
+  saveSilent();
+})();
+</script>
+
 </body></html>
