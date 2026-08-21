@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alicia Gymnasium Quest – V10.17</title>
-<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1017.png?v=1017">
-<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1017.png?v=1017">
-<link rel="manifest" href="manifest-v1017.webmanifest?v=1017">
+<title>Alicia Gymnasium Quest – V10.19</title>
+<link rel="apple-touch-icon" sizes="180x180" href="alicia-gymnasium-apple-v1019.png?v=1019">
+<link rel="icon" type="image/png" href="alicia-gymnasium-icon-v1019.png?v=1019">
+<link rel="manifest" href="manifest-v1019.webmanifest?v=1019">
 <meta name="theme-color" content="#0d1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -198,13 +198,13 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 <meta name="apple-mobile-web-app-title" content="Alicia Gymnasium Quest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Alicia Gymnasium Quest">
-<meta property="og:image" content="alicia-gymnasium-icon-v1017.png?v=1017">
+<meta property="og:image" content="alicia-gymnasium-icon-v1019.png?v=1019">
 
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
- <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.17 · COHERENT TIME</div></div>
+ <div class="logo">ALICIA<br><span>GYMNASIUM QUEST</span><div class="version">V10.19 · SIMPLE MENU + WOCHEN-CHECK</div></div>
  <div class="nav" id="nav"></div>
 </aside>
 <main class="main">
@@ -5018,7 +5018,7 @@ if(state.v1016.dailyXpStart[today()]===undefined)state.v1016.dailyXpStart[today(
 setTimeout(()=>{renderProgramProgressV1016();renderLeague();updateStats();},400);
 
 
-// ================= V10.17 · COHERENT TIME =================
+// ================= V10.19 · SIMPLE MENU + WOCHEN-CHECK =================
 state.v1017=state.v1017||{pflichtBaselineActual:{},extraXpAwarded:{}};
 
 function plannedCompletedMinutesV1017(){
@@ -5126,5 +5126,68 @@ updateAll();
    <button onclick="hideCoach()">OK ✓</button>
  </div>
 </div>
+
+
+<style id="v1019-style">
+.v1019-nav-group{margin:7px 0;border:1px solid #2f3656;border-radius:14px;overflow:hidden;background:#171c30}
+.v1019-nav-head{width:100%;border:0;background:#202640;color:white;padding:12px 13px;text-align:left;font-weight:900;cursor:pointer}
+.v1019-nav-items{display:none;padding:5px}.v1019-nav-group.open .v1019-nav-items{display:block}
+.v1019-nav-items button{font-size:13px;padding:9px 10px!important}
+.v1019-help{font-size:11px;color:#aab2ca;padding:0 10px 9px;line-height:1.35}
+.v1019-primary{background:linear-gradient(135deg,#33255e,#18264b)!important;border:1px solid #6d5bf3!important}
+.v1019-week{border:2px solid #fbbf24;background:linear-gradient(135deg,#2d2819,#202640)}
+.v1019-chip{display:inline-flex;padding:5px 9px;border-radius:999px;background:#27304e;margin:3px;font-size:12px}
+@media(max-width:950px){.sidebar{padding:12px}.nav{display:block!important;overflow:visible!important}.v1019-nav-group{min-width:100%}}
+</style>
+<script id="v1019-patch">
+state.v1019=state.v1019||{weeklyChecks:{},weeklyHistory:[]};
+
+/* V10.19: seules les vraies minutes comptent. */
+totalCreditedMinutesV1017=function(){return Math.max(0,Number(state.dailyPath.activityMinutes[today()]||0));};
+v1014TodayWorkedMinutes=function(){return totalCreditedMinutesV1017();};
+
+renderStructuredDaily=function(){
+ const ds=getDailyState(),tpl=dailyTemplate(),total=totalCreditedMinutesV1017(),extra=Math.max(0,total-60);
+ ds.minutes=total;
+ if(total>=60&&!ds.validated){ds.validated=true;state.dailyPath.validatedDays++;state.xp+=500;state.dailyPath.dayBonuses++;ds.bonus=true;}
+ const tm=document.getElementById('todayMinutes'),pb=document.getElementById('todayProgressBar'),tv=document.getElementById('todayValidation');
+ if(tm)tm.textContent=total;if(pb)pb.style.width=Math.min(100,total/60*100)+'%';
+ if(tv)tv.textContent=total>=60?`✅ Tagesmission geschafft · 60/60 min${extra?` · +${extra} min Extra-Training`:''}`:`Noch ${60-total} echte Minuten bis zur Tagesvalidierung`;
+ const host=document.getElementById('structuredDailyPlan');
+ if(host){
+  host.innerHTML=tpl.map((s,i)=>`<div class="daily-step ${ds.steps[s.id]?'done':''}"><div class="num">${ds.steps[s.id]?'✓':i+1}</div><div><strong>${s.icon} ${s.name}</strong><div class="muted">${s.min} min Zielzeit${s.skill?' · '+s.skill:''}</div></div>${ds.steps[s.id]?'<span class="badge">Aufgabe geschafft</span>':`<button class="btn" onclick="startDailyStep('${s.id}','${s.action}','${s.skill||''}',${s.min})">Start</button>`}</div>`).join('');
+  let card=document.getElementById('dailyAccountingV1017');
+  if(!card){card=document.createElement('div');card.id='dailyAccountingV1017';card.className='card';card.style.margin='14px 0';host.insertAdjacentElement('afterend',card);}
+  card.innerHTML=`<h3>⏱️ Echte Lernzeit heute</h3><div class="feedback-grid"><div class="feedback-cell"><strong>Heute</strong><br>${total}/60 min</div><div class="feedback-cell"><strong>Noch</strong><br>${Math.max(0,60-total)} min</div><div class="feedback-cell"><strong>Extra</strong><br>${extra} min</div></div><p class="muted">Die Tagesmission wird erst bei 60 wirklich gearbeiteten Minuten validiert. Schnell gelöste Aufgaben bleiben geschafft, schenken aber keine künstlichen Minuten.</p>`;
+ }
+ awardExtraTimeXpV1017(total);if(total>=60)setTimeout(celebrateDayV1016,100);renderWeekStreak();renderProgramProgressV1016();saveSilent();
+};
+
+const V1019_GROUPS=[
+ {id:'today',icon:'🎯',title:'HEUTE',help:'Ce que je dois faire aujourd’hui.',open:true,items:[['home','🏠','Start'],['todayplan','🎯','Mein Tagesplan'],['daily','⚡','Daily Quest']]},
+ {id:'learn',icon:'📚',title:'LERNEN',help:'J’apprends l’allemand, les maths et la logique.',items:[['deutsch','🇩🇪','Deutsch'],['mathe','🔢','Mathematik'],['logik','🧠','Logik'],['vocab','📚','Wortschatz'],['lessons','📘','Lektionen'],['writing','✍️','Schreiben'],['dictation','🎧','Diktat'],['longreading','📖','Lesen']]},
+ {id:'train',icon:'🏋️',title:'TRAINIEREN',help:'Je m’entraîne plus longtemps ou je prépare les tests.',items:[['bonusplay','🎮','Bonus Training'],['longseries','🏋️','Serien'],['boss','👑','Boss Tests'],['testcenter','🎯','Potenzialtest'],['startklar','🚀','Startklar Klasse 6'],['resources','🌐','Ressourcen'],['books','📚','Romane'],['projects','🔎','Projekte']]},
+ {id:'progress',icon:'🏆',title:'MEIN FORTSCHRITT',help:'Je regarde mes progrès, trophées et objectifs.',items:[['roadmapplus','🗺️','Learning Path'],['roadmap','📅','Roadmap Monate'],['coverage','✅','Kompetenzen'],['stats','📈','Statistik'],['league','🏆','Liga'],['trophies','🎖️','Trophäen'],['weeklycheck','🧪','Wochen-Check']]},
+ {id:'parent',icon:'🔐',title:'ELTERN',help:'Réglages et détails réservés aux parents.',items:[['t0','🏕️','T0 Training Camp'],['t0tests','🧪','T0 Tests'],['bank','🗃️','Aufgabenbank'],['freeanswer','🧠','Freie Antworten'],['matrix','📊','Matrix'],['jokerstats','🃏','Joker'],['parents','🔐','Elternbereich']]}
+];
+function renderSimpleNavV1019(){const nav=document.getElementById('nav');if(!nav)return;nav.innerHTML=V1019_GROUPS.map(g=>`<div class="v1019-nav-group ${g.open?'open':''}" data-group="${g.id}"><button class="v1019-nav-head" onclick="toggleV1019Group('${g.id}')">${g.icon} ${g.title}</button><div class="v1019-help">${g.help}</div><div class="v1019-nav-items">${g.items.map(p=>`<button data-page="${p[0]}" onclick="showScreen('${p[0]}')">${p[1]} ${p[2]}</button>`).join('')}</div></div>`).join('');}
+function toggleV1019Group(id){document.querySelectorAll('.v1019-nav-group').forEach(g=>{if(g.dataset.group===id)g.classList.toggle('open');});}
+
+function diagnosticDoneV1019(){const t=state.t0TestResults||state.testResults||{};return (state.t0Day&&state.t0Day>1)||Object.keys(t).length>0||(state.completedExercises||[]).length>=20;}
+function decorateHomeV1019(){const home=document.getElementById('home');if(!home)return;let box=document.getElementById('v1019StartGuide');if(!box){box=document.createElement('div');box.id='v1019StartGuide';box.className='card full v1019-primary';const grid=home.querySelector('.grid');if(grid)grid.prepend(box);}box.innerHTML=diagnosticDoneV1019()?`<h2>✅ Étape 1 terminée : diagnostic de départ</h2><p>Le T0 ne se refait pas chaque jour. Maintenant, la mission principale est <strong>Mein Tagesplan</strong>.</p><button class="btn green" onclick="showScreen('todayplan')">▶ Mein Tagesplan starten</button>`:`<h2>🏁 Étape 1 : diagnostic de départ</h2><p>À faire une seule fois pour connaître le niveau de départ.</p><button class="btn" onclick="showScreen('t0tests')">Diagnostic starten</button>`;}
+
+function isoWeekKeyV1019(d=new Date()){const x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=x.getUTCDay()||7;x.setUTCDate(x.getUTCDate()+4-day);const y=new Date(Date.UTC(x.getUTCFullYear(),0,1));const w=Math.ceil((((x-y)/86400000)+1)/7);return x.getUTCFullYear()+'-W'+String(w).padStart(2,'0');}
+function weeklyCheckDueV1019(){const key=isoWeekKeyV1019();if(state.v1019.weeklyChecks[key])return false;const days=Number(state.dailyPath.validatedDays||0);return days>0&&days%7===6;}
+function ensureWeeklyScreenV1019(){if(document.getElementById('weeklycheck'))return;const sec=document.createElement('section');sec.id='weeklycheck';sec.className='screen';sec.innerHTML=`<h1>🧪 Wochen-Check</h1><p class="muted">Une fois par semaine : mesurer les progrès, puis travailler précisément ce qui reste fragile.</p><div class="card v1019-week"><span class="badge gold">1× PRO WOCHE</span><h2 style="margin-top:10px">20 Fragen · Deutsch + Mathematik + Logik</h2><p>≈ 20 minutes d’évaluation avec des questions variées, puis ≈ 40 minutes de travail ciblé sur les faiblesses détectées.</p><div id="weeklyStatusV1019"></div><button class="btn gold" onclick="startWeeklyCheckV1019()">▶ Wochen-Check starten</button> <button class="btn secondary" onclick="startWeeklyWeaknessV1019()">🎯 40 min Schwächen-Training</button></div><div class="card exercise" id="weeklyExerciseV1019" style="display:none;margin-top:16px"></div><div class="card" style="margin-top:16px"><h2>📊 Verlauf</h2><div id="weeklyHistoryV1019"></div></div>`;const main=document.querySelector('main.main');if(main)main.appendChild(sec);}
+function startWeeklyCheckV1019(){const pool=[...expandedPool('D',7),...expandedPool('M',7),...expandedPool('L',6)].sort(()=>Math.random()-.5);state.v1019.weeklyChecks[isoWeekKeyV1019()]={started:Date.now(),questions:20};saveSilent();startSession(pool.slice(0,20),'weeklyExerciseV1019','diagnostic');showScreen('weeklycheck');renderWeeklyV1019();}
+function startWeeklyWeaknessV1019(){startSession(adaptiveExercises(20,null),'weeklyExerciseV1019','series');showScreen('weeklycheck');}
+function renderWeeklyV1019(){const st=document.getElementById('weeklyStatusV1019');if(st)st.innerHTML=weeklyCheckDueV1019()?'<p class="notice warn">🏆 Ton Wochen-Check est prêt : aujourd’hui on mesure tes progrès.</p>':'<p class="notice">Cette évaluation revient environ une fois par semaine. Les autres jours restent des jours d’apprentissage.</p>';const h=document.getElementById('weeklyHistoryV1019');if(h){const entries=Object.entries(state.v1019.weeklyChecks||{}).sort().reverse().slice(0,8);h.innerHTML=entries.length?entries.map(([k,v])=>`<span class="v1019-chip">🧪 ${k} · ${v.questions||20} Fragen</span>`).join(''):'<p class="muted">Noch kein Wochen-Check gespeichert.</p>';}}
+function weeklyHomeBannerV1019(){const home=document.getElementById('home');if(!home)return;let b=document.getElementById('weeklyHomeV1019');if(!b){b=document.createElement('div');b.id='weeklyHomeV1019';b.className='card full v1019-week';const g=home.querySelector('.grid');if(g)g.appendChild(b);}b.style.display=weeklyCheckDueV1019()?'block':'none';b.innerHTML='<h2>🧪 Heute: Wochen-Check!</h2><p>Après 6 jours d’entraînement, aujourd’hui on mesure les progrès puis on travaille les faiblesses.</p><button class="btn gold" onclick="showScreen(\'weeklycheck\')">Wochen-Check öffnen</button>';}
+
+const oldShowScreenV1019=showScreen;
+showScreen=function(id){oldShowScreenV1019(id);document.querySelectorAll('#nav [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='weeklycheck')renderWeeklyV1019();};
+ensureWeeklyScreenV1019();renderSimpleNavV1019();decorateHomeV1019();weeklyHomeBannerV1019();renderWeeklyV1019();
+setTimeout(()=>{renderStructuredDaily();renderSimpleNavV1019();decorateHomeV1019();weeklyHomeBannerV1019();renderWeeklyV1019();},500);
+</script>
 
 </body></html>
